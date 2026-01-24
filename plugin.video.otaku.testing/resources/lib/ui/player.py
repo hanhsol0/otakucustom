@@ -5,7 +5,7 @@ import service
 import json
 
 from resources.lib.ui import control, database
-from resources.lib.endpoints import aniskip, anime_skip
+from resources.lib.endpoints import aniskip, anime_skip, opensubtitles
 from resources.lib import WatchlistIntegration, indexers
 
 
@@ -371,12 +371,28 @@ class WatchlistPlayer(player):
             control.log(f'Looking for {preferred_lang_code} ({preferred_lang}) subtitles from OpenSubtitles...')
 
             # Small delay to ensure video is playing
-            xbmc.sleep(2000)
+            xbmc.sleep(1000)
 
-            # Set the preferred language for subtitle search
-            xbmc.executebuiltin(f'SetSubtitles({preferred_lang})')
+            # Try to fetch using OpenSubtitles API
+            if opensubtitles.is_enabled():
+                # Get show info for search
+                title = getattr(self, 'anime_title', None) or self.mal_id
+                episode = getattr(self, 'episode', None)
 
-            # Trigger Kodi's subtitle search dialog
+                success = opensubtitles.fetch_and_apply_subtitle(
+                    player=self,
+                    title=title,
+                    episode=episode,
+                    language=preferred_lang
+                )
+
+                if success:
+                    self.showSubtitles(True)
+                    control.log('OpenSubtitles: Subtitle applied successfully')
+                    return
+
+            # Fallback to Kodi's subtitle search dialog if API fails or not configured
+            control.log('Falling back to Kodi subtitle search dialog')
             xbmc.executebuiltin('ActivateWindow(SubtitleSearch)')
         except Exception as e:
             control.log(f'Error fetching external subtitles: {e}', 'error')

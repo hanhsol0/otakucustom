@@ -1202,6 +1202,19 @@
 						</dependency>
 					</dependencies>
 				</setting>
+				<setting id="opensubtitles.enable" type="boolean" label="OpenSubtitles Fallback" help="Auto-fetch subtitles from OpenSubtitles when no embedded subs found">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
+				<setting id="opensubtitles.apikey" type="string" label="OpenSubtitles API Key" help="Get free API key from opensubtitles.com" parent="opensubtitles.enable">
+					<level>0</level>
+					<default></default>
+					<control type="edit" format="string"/>
+					<dependencies>
+						<dependency type="visible" setting="opensubtitles.enable">true</dependency>
+					</dependencies>
+				</setting>
 				<setting id="playlist.unaired" type="boolean" label="30391" help="">
 					<level>0</level>
 					<default>false</default>
