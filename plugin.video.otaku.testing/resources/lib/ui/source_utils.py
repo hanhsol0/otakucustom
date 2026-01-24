@@ -334,19 +334,22 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
     regex = get_cache_check_reg(episode)
 
     # Comprehensive patterns to exclude non-episode files (OPs, EDs, extras, etc.)
+    # Check against ORIGINAL filename (before stripping brackets) to catch [SP01] etc.
     exclude_patterns = re.compile(
         r'''(?ix)                           # Case-insensitive, verbose
         (?:^|[\s._\-\[\(])                  # Start of string or separator
         (?:
-            NC\s?OP\d*|NC\s?ED\d*|          # Creditless OP/ED
+            NC\s?OP\d*|NC\s?ED\d*|          # Creditless OP/ED (NCOP, NCED)
+            NCOP|NCED|                       # Also match without space
             OP\s?\d*v?\d*|ED\s?\d*v?\d*|    # OP1, OP2, ED1, ED2, etc.
             OPENING\s?\d*|ENDING\s?\d*|     # Opening/Ending
             INTRO|OUTRO|                     # Intro/Outro
+            SP\d+|                           # Special markers [SP01], [SP02]
             TRAILER\d*|PREVIEW\d*|PV\d*|    # Trailers/Previews
             CM\d*|SPOT\d*|TV\s?SPOT|        # Commercials
             WEB\s?PREVIEW|                   # Web previews
             MENU|EXTRA\d*|BONUS\d*|         # Menu/Extras/Bonus
-            SPECIAL\d*|OVA\d*|OAD\d*|       # Specials/OVA (unless looking for them)
+            SPECIAL\d*|OVA\d*|OAD\d*|       # Specials/OVA
             CREDITLESS|CLEAN|TEXTLESS|      # Clean versions
             CHARACTER\s?(?:PV|SONG)?|       # Character content
             PROMO|INTERVIEW|MAKING|         # Promotional content
@@ -372,16 +375,18 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
 
     files = []
     for i in dictionary_list:
-        path = re.sub(r'\[.*?]', '', i[dict_key].split('/')[-1])
+        original_filename = i[dict_key].split('/')[-1]
+        # Strip brackets for episode regex matching only
+        path = re.sub(r'\[.*?]', '', original_filename)
         if not is_file_ext_valid(path):
             continue
         i['regex_matches'] = regex.findall(path)
-        # Check if this looks like a non-episode file
-        i['is_extra'] = bool(exclude_patterns.search(path))
+        # Check ORIGINAL filename for extras (to catch [SP01], [NCOP], etc.)
+        i['is_extra'] = bool(exclude_patterns.search(original_filename))
         # Check if this has an explicit episode marker (higher confidence)
         i['has_explicit_ep'] = bool(explicit_ep_pattern.search(path))
-        # Store filename for logging
-        i['_filename'] = path
+        # Store original filename for logging
+        i['_filename'] = original_filename
         files.append(i)
 
     if pack_select:
@@ -399,66 +404,51 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         if non_extras:
             files = non_extras
             control.log(f"Filtered to {len(files)} non-extra files")
+        else:
+            # ALL files are extras - don't auto-select, fail instead
+            control.log(f"All {len(files)} files are extras - no valid episode file found", 'warning')
+            control.setBool('best_match', False)
+            return {}
 
-        # Step 2: If still multiple matches, prefer files with explicit episode markers
-        if len(files) > 1:
-            explicit_matches = [f for f in files if f.get('has_explicit_ep', False)]
-            if explicit_matches:
-                files = explicit_matches
-                control.log(f"Filtered to {len(files)} files with explicit episode markers")
-
-        # Step 3: Sort by multiple criteria
-        def score_file(f):
-            score = 0
-            filename = f.get('_filename', '').lower()
-
-            # Regex match quality (longer match = better)
-            if f['regex_matches']:
-                score += len(' '.join(list(f['regex_matches'][0]))) * 10
-
-            # Prefer files with explicit episode markers
-            if f.get('has_explicit_ep', False):
-                score += 100
-
-            # Prefer larger files (full episodes are bigger than OP/ED clips)
-            # OP/ED are typically 30-90 seconds (5-30MB), full episodes are 200MB+
+        # Step 2: Parse file sizes for comparison
+        def get_file_size_mb(f):
+            """Extract file size in MB for comparison"""
             file_size = f.get('size', 0)
+            if isinstance(file_size, (int, float)):
+                return file_size
             if isinstance(file_size, str):
-                # Parse size string like "1.5 GB" or "500 MB"
                 try:
-                    size_match = re.match(r'([\d.]+)\s*(GB|MB|KB)?', file_size, re.IGNORECASE)
+                    size_match = re.match(r'([\d.]+)\s*(GB|MB|KB|B)?', file_size, re.IGNORECASE)
                     if size_match:
                         size_num = float(size_match.group(1))
                         unit = (size_match.group(2) or 'MB').upper()
                         if unit == 'GB':
-                            file_size = size_num * 1024
+                            return size_num * 1024
                         elif unit == 'KB':
-                            file_size = size_num / 1024
+                            return size_num / 1024
+                        elif unit == 'B':
+                            return size_num / (1024 * 1024)
                         else:
-                            file_size = size_num
+                            return size_num
                 except (ValueError, AttributeError):
-                    file_size = 0
+                    pass
+            return 0
 
-            # Files over 100MB get bonus (likely full episode)
-            if file_size > 100:
-                score += 50
-            # Files under 50MB get penalty (likely extras)
-            elif file_size > 0 and file_size < 50:
-                score -= 30
+        # Add parsed size to each file
+        for f in files:
+            f['_size_mb'] = get_file_size_mb(f)
 
-            # Penalize files that look like they might be extras
-            penalty_terms = ['preview', 'pv', 'cm', 'spot', 'short', 'mini', 'bonus', 'extra']
-            for term in penalty_terms:
-                if term in filename:
-                    score -= 20
+        # Step 3: Sort primarily by file size (largest = full episode)
+        # Full episodes are 200MB-2GB, extras are typically under 100MB
+        files = sorted(files, key=lambda f: f.get('_size_mb', 0), reverse=True)
 
-            return score
+        # Log selection
+        selected = files[0]
+        control.log(f"Best match: {selected.get('_filename', 'unknown')} "
+                    f"({selected.get('_size_mb', 0):.1f} MB) from {len(files)} candidates")
 
-        files = sorted(files, key=score_file, reverse=True)
-        control.log(f"Best match: {files[0].get('_filename', 'unknown')} (from {len(files)} candidates)")
-
-        # Auto-select the best match
-        files = [files[0]]
+        # Auto-select the largest file
+        files = [selected]
 
     return files[0]
 
