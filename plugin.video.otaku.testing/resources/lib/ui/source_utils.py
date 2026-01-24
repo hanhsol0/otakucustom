@@ -333,8 +333,42 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
     control.setBool('best_match', True)
     regex = get_cache_check_reg(episode)
 
-    # Patterns to exclude non-episode files
-    exclude_patterns = re.compile(r'(?i)(^|[\s._-])(NC ?OP|NC ?ED|OP ?[0-9]*|ED ?[0-9]*|OPENING|ENDING|TRAILER|PREVIEW|PV|CM|MENU|EXTRA|BONUS|SPECIAL|CREDITLESS|CLEAN|TEXTLESS|TV ?SPOT|WEB ?PREVIEW|CHARACTER|PROMO|INTERVIEW|MAKING|BEHIND|DIGEST|RECAP|NEXT ?EP)', re.IGNORECASE)
+    # Comprehensive patterns to exclude non-episode files (OPs, EDs, extras, etc.)
+    exclude_patterns = re.compile(
+        r'''(?ix)                           # Case-insensitive, verbose
+        (?:^|[\s._\-\[\(])                  # Start of string or separator
+        (?:
+            NC\s?OP\d*|NC\s?ED\d*|          # Creditless OP/ED
+            OP\s?\d*v?\d*|ED\s?\d*v?\d*|    # OP1, OP2, ED1, ED2, etc.
+            OPENING\s?\d*|ENDING\s?\d*|     # Opening/Ending
+            INTRO|OUTRO|                     # Intro/Outro
+            TRAILER\d*|PREVIEW\d*|PV\d*|    # Trailers/Previews
+            CM\d*|SPOT\d*|TV\s?SPOT|        # Commercials
+            WEB\s?PREVIEW|                   # Web previews
+            MENU|EXTRA\d*|BONUS\d*|         # Menu/Extras/Bonus
+            SPECIAL\d*|OVA\d*|OAD\d*|       # Specials/OVA (unless looking for them)
+            CREDITLESS|CLEAN|TEXTLESS|      # Clean versions
+            CHARACTER\s?(?:PV|SONG)?|       # Character content
+            PROMO|INTERVIEW|MAKING|         # Promotional content
+            BEHIND|DIGEST|RECAP|            # Behind the scenes
+            NEXT\s?EP|NEXT\s?TIME|          # Next episode previews
+            INSERT\s?SONG|SOUNDTRACK|OST|   # Music
+            SHORT\d*|MINI\d*                # Short clips
+        )
+        (?:[\s._\-\]\)]|$)                  # End separator
+        ''', re.IGNORECASE | re.VERBOSE
+    )
+
+    # Pattern to detect explicit episode markers (stronger confidence)
+    explicit_ep_pattern = re.compile(
+        r'''(?ix)
+        (?:
+            [Ee](?:p(?:isode)?)?[\s._-]?\d{1,4}|   # E01, Ep01, Episode 01
+            [Ss]\d{1,2}[Ee]\d{1,4}|                 # S01E01
+            -\s?\d{2,4}(?:v\d)?(?:\s|$|[._\-\]])   # - 01, - 001 (common anime format)
+        )
+        '''
+    )
 
     files = []
     for i in dictionary_list:
@@ -344,6 +378,10 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         i['regex_matches'] = regex.findall(path)
         # Check if this looks like a non-episode file
         i['is_extra'] = bool(exclude_patterns.search(path))
+        # Check if this has an explicit episode marker (higher confidence)
+        i['has_explicit_ep'] = bool(explicit_ep_pattern.search(path))
+        # Store filename for logging
+        i['_filename'] = path
         files.append(i)
 
     if pack_select:
@@ -356,14 +394,70 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
             control.setBool('best_match', False)
             return {}
 
-        # Prefer non-extra files over extras (intros, trailers, etc.)
+        # Step 1: Filter out extras (intros, trailers, etc.)
         non_extras = [f for f in files if not f.get('is_extra', False)]
         if non_extras:
             files = non_extras
+            control.log(f"Filtered to {len(files)} non-extra files")
 
-        # Sort by match quality (longer match = better) and file size (larger = likely full episode)
-        files = sorted(files, key=lambda x: len(' '.join(list(x['regex_matches'][0]))), reverse=True)
-        # Auto-select the best match (first after sorting) instead of prompting user
+        # Step 2: If still multiple matches, prefer files with explicit episode markers
+        if len(files) > 1:
+            explicit_matches = [f for f in files if f.get('has_explicit_ep', False)]
+            if explicit_matches:
+                files = explicit_matches
+                control.log(f"Filtered to {len(files)} files with explicit episode markers")
+
+        # Step 3: Sort by multiple criteria
+        def score_file(f):
+            score = 0
+            filename = f.get('_filename', '').lower()
+
+            # Regex match quality (longer match = better)
+            if f['regex_matches']:
+                score += len(' '.join(list(f['regex_matches'][0]))) * 10
+
+            # Prefer files with explicit episode markers
+            if f.get('has_explicit_ep', False):
+                score += 100
+
+            # Prefer larger files (full episodes are bigger than OP/ED clips)
+            # OP/ED are typically 30-90 seconds (5-30MB), full episodes are 200MB+
+            file_size = f.get('size', 0)
+            if isinstance(file_size, str):
+                # Parse size string like "1.5 GB" or "500 MB"
+                try:
+                    size_match = re.match(r'([\d.]+)\s*(GB|MB|KB)?', file_size, re.IGNORECASE)
+                    if size_match:
+                        size_num = float(size_match.group(1))
+                        unit = (size_match.group(2) or 'MB').upper()
+                        if unit == 'GB':
+                            file_size = size_num * 1024
+                        elif unit == 'KB':
+                            file_size = size_num / 1024
+                        else:
+                            file_size = size_num
+                except (ValueError, AttributeError):
+                    file_size = 0
+
+            # Files over 100MB get bonus (likely full episode)
+            if file_size > 100:
+                score += 50
+            # Files under 50MB get penalty (likely extras)
+            elif file_size > 0 and file_size < 50:
+                score -= 30
+
+            # Penalize files that look like they might be extras
+            penalty_terms = ['preview', 'pv', 'cm', 'spot', 'short', 'mini', 'bonus', 'extra']
+            for term in penalty_terms:
+                if term in filename:
+                    score -= 20
+
+            return score
+
+        files = sorted(files, key=score_file, reverse=True)
+        control.log(f"Best match: {files[0].get('_filename', 'unknown')} (from {len(files)} candidates)")
+
+        # Auto-select the best match
         files = [files[0]]
 
     return files[0]

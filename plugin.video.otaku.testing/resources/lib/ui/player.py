@@ -229,8 +229,11 @@ class WatchlistPlayer(player):
         else:
             control.log(f'Last watched unchanged ({current_mal_id}) - skipping updates')
 
-        # Continue with audio/subtitle setup which is needed immediately
+        # Continue with audio/subtitle setup
+        # For debrid sources, wait a moment for Kodi to parse embedded streams
         if self.type not in ['embed', 'direct']:
+            # Wait for streams to be fully loaded for debrid/torrent sources
+            xbmc.sleep(1500)  # 1.5 second delay for stream parsing
             self.setup_audio_and_subtitles()
         elif self.provider in ['aniwave', 'h!anime']:
             self.setup_audio_and_subtitles()
@@ -268,10 +271,14 @@ class WatchlistPlayer(player):
             return
 
         # Wait for skip times to be processed (with timeout)
-        timeout = 30  # 30 iterations = 3 seconds max
+        # Increased timeout to 10 seconds to allow AniSkip API to respond
+        timeout = 100  # 100 iterations = 10 seconds max
         while not self._skip_processed and timeout > 0:
             xbmc.sleep(100)
             timeout -= 1
+
+        if not self._skip_processed:
+            control.log('Skip times processing timed out - using default times', 'warning')
 
         # Determine intro times and whether we have aniskip data
         intro_start = self.skipintro_start if self.skipintro_aniskip else control.getInt('skipintro.delay') or 1
@@ -338,8 +345,7 @@ class WatchlistPlayer(player):
         return False
 
     def setup_audio_and_subtitles(self):
-        """Handle audio and subtitle setup"""
-        # This contains your existing audio/subtitle setup code from keepAlive
+        """Handle audio and subtitle setup with retry logic for debrid sources"""
         if not control.getBool('general.kodi_language'):
             query = {
                 'jsonrpc': '2.0',
@@ -370,15 +376,26 @@ class WatchlistPlayer(player):
                 3: control.getSetting('subtitles.customkeyword')
             }
 
-            response = control.jsonrpc(query)
+            # Retry logic for getting streams (debrid sources may need time to load)
+            audio_streams = []
+            subtitle_streams = []
+            for attempt in range(3):
+                response = control.jsonrpc(query)
+                if 'result' in response:
+                    player_properties = response['result']
+                    audio_streams = player_properties.get('audiostreams', [])
+                    subtitle_streams = player_properties.get('subtitles', [])
+                    # If we have streams, we're good
+                    if audio_streams or subtitle_streams:
+                        control.log(f'Found {len(audio_streams)} audio and {len(subtitle_streams)} subtitle streams')
+                        break
+                # Wait before retry
+                if attempt < 2:
+                    xbmc.sleep(1000)
 
-            if 'result' in response:
-                player_properties = response['result']
-                audio_streams = player_properties.get('audiostreams', [])
-                subtitle_streams = player_properties.get('subtitles', [])
-            else:
-                audio_streams = []
-                subtitle_streams = []
+            if not audio_streams and not subtitle_streams:
+                control.log('No audio/subtitle streams found after retries', 'warning')
+                return
 
             preferred_audio_streams = audios[self.preferred_audio]
             preferred_subtitle_lang = subtitles[self.preferred_subtitle_setting]
