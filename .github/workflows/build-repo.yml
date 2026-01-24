@@ -13,6 +13,10 @@ concurrency:
   group: build-repo
   cancel-in-progress: false
 
+# Required for pushing commits back to repo
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,6 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full history for rebasing
+          token: ${{ github.token }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
