@@ -196,22 +196,22 @@ def setSetting(settingid, value):
 
 def setBool(settingid, value):
     """Set setting as boolean"""
-    settings.setBool(settingid, value)
+    ADDON.setSetting(settingid, 'true' if value else 'false')
 
 
 def setInt(settingid, value):
     """Set setting as integer"""
-    settings.setInt(settingid, value)
+    ADDON.setSetting(settingid, str(value))
 
 
 def setStr(settingid, value):
     """Set setting as string"""
-    settings.setString(settingid, value)
+    ADDON.setSetting(settingid, str(value))
 
 
 def setNumber(settingid, value):
     """Set setting as float/number"""
-    settings.setNumber(settingid, value)
+    ADDON.setSetting(settingid, str(value))
 
 
 def setStringList(settingid, value):
