@@ -112,51 +112,29 @@ class RealDebrid:
             control.ok_dialog(control.ADDON_NAME, f'Real-Debrid token error: {str(e)}')
 
     def status(self):
-        # DEBUG: Show token status
-        token_preview = self.token[:20] if self.token else 'EMPTY'
-        control.ok_dialog('DEBUG 1', f'Token: {token_preview}...')
-
         response = client.get(f'{self.BaseUrl}/user', headers=self.headers())
-
-        # DEBUG: Show response status
-        if not response:
-            control.ok_dialog('DEBUG 2', 'Response is None/Empty')
-        else:
-            control.ok_dialog('DEBUG 2', f'Response OK: {response.ok}, Status: {response.status_code}')
-
         if not response or not response.ok:
-            error_text = response.text[:100] if response else 'No response'
-            control.ok_dialog('DEBUG ERROR', f'Failed: {error_text}')
             control.ok_dialog(control.ADDON_NAME, 'Failed to get Real-Debrid user info')
             return
 
         try:
             user_info = response.json()
-            # DEBUG: Show what we got
-            control.ok_dialog('DEBUG 3', f'Got user_info keys: {list(user_info.keys())}')
-
             username = user_info.get('username', '')
             user_type = user_info.get('type', '')
-
-            # DEBUG: Show username before saving
-            control.ok_dialog('DEBUG 4', f'Username: "{username}", Type: "{user_type}"')
 
             control.setSetting('realdebrid.username', username)
             control.setSetting('realdebrid.auth.status', user_type.capitalize() if user_type else '')
 
-            # DEBUG: Verify it was saved
-            saved_username = control.getSetting('realdebrid.username')
-            control.ok_dialog('DEBUG 5', f'Saved username reads back as: "{saved_username}"')
-
-            control.ok_dialog(control.ADDON_NAME, f'Real-Debrid {control.lang(30084)}')
+            # Show username in success message so user knows it worked
+            control.ok_dialog(control.ADDON_NAME, f'Real-Debrid {control.lang(30084)}[CR]Username: {username}')
             control.setBool('show.uncached', True)
             control.setBool('uncached.autoruninforground', False)
             control.setBool('uncached.autoruninbackground', False)
             control.setBool('uncached.autoskipuncached', True)
-            if user_info.get('type') != 'premium':
+            if user_type != 'premium':
                 control.ok_dialog(f'{control.ADDON_NAME}: Real-Debrid', control.lang(30085))
         except (ValueError, KeyError) as e:
-            control.ok_dialog('DEBUG EXCEPTION', f'Error: {str(e)}')
+            control.ok_dialog(control.ADDON_NAME, f'Real-Debrid user info error: {str(e)}')
 
     def refreshToken(self):
         postData = {
