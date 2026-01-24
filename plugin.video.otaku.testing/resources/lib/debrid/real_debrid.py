@@ -81,8 +81,10 @@ class RealDebrid:
             control.sleep(self.OauthTimeStep * 1000)
             auth_done = self.auth_loop()
         control.progressDialog.close()
+        control.ok_dialog('DEBUG', f'auth_done = {auth_done}, ClientSecret = {"SET" if self.ClientSecret else "EMPTY"}')
         if auth_done:
             self.token_request()
+            control.ok_dialog('DEBUG', f'After token_request, token = {"SET" if self.token else "EMPTY"}')
             self.status()
 
     def token_request(self):
