@@ -146,27 +146,35 @@ def refresh():
 
 def getSetting(key):
     """Get setting as string - kept for backward compatibility"""
-    return settings.getString(key)
+    return ADDON.getSetting(key)
 
 
 def getBool(key):
     """Get setting as boolean"""
-    return settings.getBool(key)
+    return ADDON.getSetting(key).lower() == 'true'
 
 
 def getInt(key):
     """Get setting as integer"""
-    return settings.getInt(key)
+    value = ADDON.getSetting(key)
+    try:
+        return int(value) if value else 0
+    except (ValueError, TypeError):
+        return 0
 
 
 def getStr(key):
     """Get setting as string"""
-    return settings.getString(key)
+    return ADDON.getSetting(key)
 
 
 def getNumber(key):
     """Get setting as float/number"""
-    return settings.getNumber(key)
+    value = ADDON.getSetting(key)
+    try:
+        return float(value) if value else 0.0
+    except (ValueError, TypeError):
+        return 0.0
 
 
 def getStringList(settingid):
