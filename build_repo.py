@@ -110,11 +110,22 @@ def generate_addons_xml(addon_paths, output_dir):
 
 
 def create_repository_zip():
-    """Create the repository installer zip for GitHub Pages"""
+    """Create the repository installer zip in repo/zips"""
     repo_addon_dir = os.path.join(SCRIPT_DIR, "repository.otakucustom")
-    zip_path = os.path.join(DOCS_DIR, "repository.otakucustom-1.1.zip")
 
-    os.makedirs(DOCS_DIR, exist_ok=True)
+    # Get version from addon.xml
+    version = get_addon_version(repo_addon_dir)
+
+    # Create in repo/zips/repository.otakucustom/
+    repo_zip_dir = os.path.join(ZIPS_DIR, "repository.otakucustom")
+    os.makedirs(repo_zip_dir, exist_ok=True)
+
+    # Remove old zips
+    for f in os.listdir(repo_zip_dir):
+        if f.endswith('.zip'):
+            os.remove(os.path.join(repo_zip_dir, f))
+
+    zip_path = os.path.join(repo_zip_dir, f"repository.otakucustom-{version}.zip")
 
     print(f"Creating repository installer zip...")
 
@@ -123,6 +134,12 @@ def create_repository_zip():
             file_path = os.path.join(repo_addon_dir, file)
             if os.path.isfile(file_path):
                 zf.write(file_path, f"repository.otakucustom/{file}")
+
+    # Copy addon.xml to the folder
+    shutil.copy(
+        os.path.join(repo_addon_dir, "addon.xml"),
+        os.path.join(repo_zip_dir, "addon.xml")
+    )
 
     print(f"Created {zip_path}")
 

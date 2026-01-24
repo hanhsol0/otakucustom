@@ -6,6 +6,7 @@ on:
     paths:
       - 'plugin.video.otaku.testing/**'
       - 'context.otaku.testing/**'
+      - 'repository.otakucustom/**'
 
 # Only allow one build at a time, queue others
 concurrency:

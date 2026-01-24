@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python build_repo.py:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
