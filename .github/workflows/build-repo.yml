@@ -7,6 +7,11 @@ on:
       - 'plugin.video.otaku.testing/**'
       - 'context.otaku.testing/**'
 
+# Only allow one build at a time, queue others
+concurrency:
+  group: build-repo
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for rebasing
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -49,4 +56,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Auto-release v${{ env.NEW_VERSION }}"
-          git push
+
+          # Retry push with rebase if it fails (handles concurrent pushes)
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            echo "Push failed, retrying in 5s... (attempt $i/3)"
+            sleep 5
+          done
