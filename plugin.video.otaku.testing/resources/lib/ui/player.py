@@ -344,6 +344,43 @@ class WatchlistPlayer(player):
             return time_remaining <= playnext_time
         return False
 
+    def _fetch_external_subtitles(self):
+        """Fetch subtitles from OpenSubtitles when no embedded subs available"""
+        try:
+            # Get preferred subtitle language from settings
+            subtitle_langs = [
+                "none", "eng", "jpn", "spa", "fre", "ger",
+                "ita", "dut", "rus", "por", "kor", "chi",
+                "ara", "hin", "tur", "pol", "swe", "nor",
+                "dan", "fin"
+            ]
+            # Map 3-letter codes to 2-letter codes for OpenSubtitles
+            lang_map = {
+                'eng': 'en', 'jpn': 'ja', 'spa': 'es', 'fre': 'fr', 'ger': 'de',
+                'ita': 'it', 'dut': 'nl', 'rus': 'ru', 'por': 'pt', 'kor': 'ko',
+                'chi': 'zh', 'ara': 'ar', 'hin': 'hi', 'tur': 'tr', 'pol': 'pl',
+                'swe': 'sv', 'nor': 'no', 'dan': 'da', 'fin': 'fi'
+            }
+
+            preferred_lang_code = subtitle_langs[control.getInt('general.subtitles')]
+            if preferred_lang_code == 'none':
+                control.log('Subtitle preference is "none" - skipping external fetch')
+                return
+
+            preferred_lang = lang_map.get(preferred_lang_code, 'en')
+            control.log(f'Looking for {preferred_lang_code} ({preferred_lang}) subtitles from OpenSubtitles...')
+
+            # Small delay to ensure video is playing
+            xbmc.sleep(2000)
+
+            # Set the preferred language for subtitle search
+            xbmc.executebuiltin(f'SetSubtitles({preferred_lang})')
+
+            # Trigger Kodi's subtitle search dialog
+            xbmc.executebuiltin('ActivateWindow(SubtitleSearch)')
+        except Exception as e:
+            control.log(f'Error fetching external subtitles: {e}', 'error')
+
     def setup_audio_and_subtitles(self):
         """Handle audio and subtitle setup with retry logic for debrid sources"""
         if not control.getBool('general.kodi_language'):
@@ -395,7 +432,14 @@ class WatchlistPlayer(player):
 
             if not audio_streams and not subtitle_streams:
                 control.log('No audio/subtitle streams found after retries', 'warning')
+                # No embedded subs - trigger OpenSubtitles search
+                self._fetch_external_subtitles()
                 return
+
+            # If no subtitle streams but we have audio, try external subs
+            if not subtitle_streams and audio_streams:
+                control.log('No embedded subtitles found - fetching from OpenSubtitles')
+                self._fetch_external_subtitles()
 
             preferred_audio_streams = audios[self.preferred_audio]
             preferred_subtitle_lang = subtitles[self.preferred_subtitle_setting]
