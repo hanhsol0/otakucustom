@@ -112,7 +112,7 @@ def generate_addons_xml(addon_paths, output_dir):
 def create_repository_zip():
     """Create the repository installer zip for GitHub Pages"""
     repo_addon_dir = os.path.join(SCRIPT_DIR, "repository.otakucustom")
-    zip_path = os.path.join(DOCS_DIR, "repository.otakucustom-1.0.zip")
+    zip_path = os.path.join(DOCS_DIR, "repository.otakucustom-1.1.zip")
 
     os.makedirs(DOCS_DIR, exist_ok=True)
 
@@ -125,6 +125,19 @@ def create_repository_zip():
                 zf.write(file_path, f"repository.otakucustom/{file}")
 
     print(f"Created {zip_path}")
+
+
+def copy_to_docs():
+    """Copy repo files to docs folder for GitHub Pages serving"""
+    docs_zips = os.path.join(DOCS_DIR, "zips")
+
+    # Remove old docs/zips and recreate
+    if os.path.exists(docs_zips):
+        shutil.rmtree(docs_zips)
+
+    # Copy entire repo/zips to docs/zips
+    shutil.copytree(ZIPS_DIR, docs_zips)
+    print(f"Copied repo files to docs/zips for GitHub Pages")
 
 
 def main():
@@ -147,6 +160,9 @@ def main():
 
     # Create repository installer
     create_repository_zip()
+
+    # Copy to docs for GitHub Pages
+    copy_to_docs()
 
     print("="*50)
     print("Repository build complete!")
