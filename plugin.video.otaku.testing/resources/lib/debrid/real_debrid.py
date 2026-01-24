@@ -81,10 +81,8 @@ class RealDebrid:
             control.sleep(self.OauthTimeStep * 1000)
             auth_done = self.auth_loop()
         control.progressDialog.close()
-        control.ok_dialog('DEBUG', f'auth_done = {auth_done}, ClientSecret = {"SET" if self.ClientSecret else "EMPTY"}')
         if auth_done:
             self.token_request()
-            control.ok_dialog('DEBUG', f'After token_request, token = {"SET" if self.token else "EMPTY"}')
             self.status()
 
     def token_request(self):
@@ -127,8 +125,7 @@ class RealDebrid:
             control.setSetting('realdebrid.username', username)
             control.setSetting('realdebrid.auth.status', user_type.capitalize() if user_type else '')
 
-            # Show username in success message so user knows it worked
-            control.ok_dialog(control.ADDON_NAME, f'Real-Debrid {control.lang(30084)}[CR]Username: {username}')
+            control.ok_dialog(control.ADDON_NAME, f'Real-Debrid {control.lang(30084)}')
             control.setBool('show.uncached', True)
             control.setBool('uncached.autoruninforground', False)
             control.setBool('uncached.autoruninbackground', False)
