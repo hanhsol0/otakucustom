@@ -1202,12 +1202,12 @@
 						</dependency>
 					</dependencies>
 				</setting>
-				<setting id="opensubtitles.enable" type="boolean" label="OpenSubtitles Fallback" help="Auto-fetch subtitles from OpenSubtitles when no embedded subs found">
+				<setting id="opensubtitles.enable" type="boolean" label="30451" help="30453">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
-				<setting id="opensubtitles.apikey" type="string" label="OpenSubtitles API Key" help="Get free API key from opensubtitles.com" parent="opensubtitles.enable">
+				<setting id="opensubtitles.apikey" type="string" label="30452" help="30454">
 					<level>0</level>
 					<default></default>
 					<control type="edit" format="string"/>

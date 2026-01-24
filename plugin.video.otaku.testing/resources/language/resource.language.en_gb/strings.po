@@ -1836,3 +1836,19 @@ msgstr ""
 msgctxt "#30450"
 msgid "Prefetch Watchlist on Startup"
 msgstr ""
+
+msgctxt "#30451"
+msgid "OpenSubtitles Fallback"
+msgstr ""
+
+msgctxt "#30452"
+msgid "OpenSubtitles API Key"
+msgstr ""
+
+msgctxt "#30453"
+msgid "Auto-fetch subtitles from OpenSubtitles when no embedded subs found"
+msgstr ""
+
+msgctxt "#30454"
+msgid "Get free API key from opensubtitles.com"
+msgstr ""
