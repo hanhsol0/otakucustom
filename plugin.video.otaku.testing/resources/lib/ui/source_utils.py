@@ -332,13 +332,20 @@ def get_fuzzy_match(query, filenames):
 def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
     control.setBool('best_match', True)
     regex = get_cache_check_reg(episode)
+
+    # Patterns to exclude non-episode files
+    exclude_patterns = re.compile(r'(?i)(^|[\s._-])(NC ?OP|NC ?ED|OP ?[0-9]*|ED ?[0-9]*|OPENING|ENDING|TRAILER|PREVIEW|PV|CM|MENU|EXTRA|BONUS|SPECIAL|CREDITLESS|CLEAN|TEXTLESS|TV ?SPOT|WEB ?PREVIEW|CHARACTER|PROMO|INTERVIEW|MAKING|BEHIND|DIGEST|RECAP|NEXT ?EP)', re.IGNORECASE)
+
     files = []
     for i in dictionary_list:
         path = re.sub(r'\[.*?]', '', i[dict_key].split('/')[-1])
         if not is_file_ext_valid(path):
             continue
         i['regex_matches'] = regex.findall(path)
+        # Check if this looks like a non-episode file
+        i['is_extra'] = bool(exclude_patterns.search(path))
         files.append(i)
+
     if pack_select:
         # User explicitly requested file selection
         files = user_select(files, dict_key)
@@ -348,7 +355,13 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         if len(files) == 0:
             control.setBool('best_match', False)
             return {}
-        # Sort by match quality (longer match = better)
+
+        # Prefer non-extra files over extras (intros, trailers, etc.)
+        non_extras = [f for f in files if not f.get('is_extra', False)]
+        if non_extras:
+            files = non_extras
+
+        # Sort by match quality (longer match = better) and file size (larger = likely full episode)
         files = sorted(files, key=lambda x: len(' '.join(list(x['regex_matches'][0]))), reverse=True)
         # Auto-select the best match (first after sorting) instead of prompting user
         files = [files[0]]
