@@ -191,7 +191,7 @@ def getNumberList(settingid):
 
 def setSetting(settingid, value):
     """Set setting as string - kept for backward compatibility"""
-    settings.setString(settingid, str(value))
+    ADDON.setSetting(settingid, str(value))
 
 
 def setBool(settingid, value):
