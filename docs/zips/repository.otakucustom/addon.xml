@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="repository.otakucustom" name="Otaku Custom Repository" version="1.1" provider-name="hanhsol0">
+<addon id="repository.otakucustom" name="Otaku Custom Repository" version="1.2" provider-name="hanhsol0">
     <extension point="xbmc.addon.repository" name="Otaku Custom Repository">
         <dir>
-            <info compressed="false">https://hanhsol0.github.io/otakucustom/zips/addons.xml</info>
-            <checksum>https://hanhsol0.github.io/otakucustom/zips/addons.xml.md5</checksum>
-            <datadir zip="true">https://hanhsol0.github.io/otakucustom/zips/</datadir>
+            <info compressed="false">https://raw.githubusercontent.com/hanhsol0/otakucustom/main/repo/zips/addons.xml</info>
+            <checksum>https://raw.githubusercontent.com/hanhsol0/otakucustom/main/repo/zips/addons.xml.md5</checksum>
+            <datadir zip="true">https://raw.githubusercontent.com/hanhsol0/otakucustom/main/repo/zips/</datadir>
         </dir>
     </extension>
     <extension point="xbmc.addon.metadata">
