@@ -340,15 +340,18 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         i['regex_matches'] = regex.findall(path)
         files.append(i)
     if pack_select:
+        # User explicitly requested file selection
         files = user_select(files, dict_key)
     else:
+        # Auto-select: filter to matching files only
         files = [i for i in files if len(i['regex_matches']) > 0]
         if len(files) == 0:
             control.setBool('best_match', False)
             return {}
+        # Sort by match quality (longer match = better)
         files = sorted(files, key=lambda x: len(' '.join(list(x['regex_matches'][0]))), reverse=True)
-        if len(files) != 1:
-            files = user_select(files, dict_key)
+        # Auto-select the best match (first after sorting) instead of prompting user
+        files = [files[0]]
 
     return files[0]
 
