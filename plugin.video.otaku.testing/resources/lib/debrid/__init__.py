@@ -1,8 +1,8 @@
 import threading
 
 from copy import deepcopy
-from resources.lib.debrid import premiumize, torbox, easydebrid
-from resources.lib.ui import control
+from resources.lib.debrid import premiumize, torbox, easydebrid, real_debrid
+from resources.lib.ui import control, client
 
 
 class Debrid:
@@ -10,6 +10,7 @@ class Debrid:
         self.premiumizeCached = []
         self.torboxCached = []
         self.easydebridCached = []
+        self.realdebridCached = []
 
         self.premiumizeUnCached = []
         self.realdebridUnCached = []
@@ -53,7 +54,7 @@ class Debrid:
         for i in self.threads:
             i.join()
 
-        cached_list = self.premiumizeCached + self.torboxCached + self.easydebridCached
+        cached_list = self.premiumizeCached + self.torboxCached + self.easydebridCached + self.realdebridCached
         uncached_list = self.realdebridUnCached + self.premiumizeUnCached + self.alldebridUnCached + self.debridlinkUnCached + self.torboxUnCached
         return cached_list, uncached_list
 
@@ -73,9 +74,30 @@ class Debrid:
     def real_debrid_worker(self, torrent_list):
         hash_list = [i['hash'] for i in torrent_list]
         if len(hash_list) > 0:
-            for torrent in torrent_list:
-                torrent['debrid_provider'] = 'Real-Debrid'
-                self.realdebridUnCached.append(torrent)
+            api = real_debrid.RealDebrid()
+            hash_string = '/'.join(hash_list)
+            response = client.get(f'{api.BaseUrl}/torrents/instantAvailability/{hash_string}', headers=api.headers())
+            if response and response.ok:
+                try:
+                    availability = response.json()
+                    for torrent in torrent_list:
+                        torrent['debrid_provider'] = 'Real-Debrid'
+                        torrent_hash = torrent['hash'].lower()
+                        # Check if hash exists in response and has available variants
+                        if torrent_hash in availability and availability[torrent_hash].get('rd'):
+                            self.realdebridCached.append(torrent)
+                        else:
+                            self.realdebridUnCached.append(torrent)
+                except (ValueError, KeyError):
+                    # On error, mark all as uncached
+                    for torrent in torrent_list:
+                        torrent['debrid_provider'] = 'Real-Debrid'
+                        self.realdebridUnCached.append(torrent)
+            else:
+                # API failed, mark all as uncached
+                for torrent in torrent_list:
+                    torrent['debrid_provider'] = 'Real-Debrid'
+                    self.realdebridUnCached.append(torrent)
 
     def premiumize_worker(self, torrent_list):
         hash_list = [i['hash'] for i in torrent_list]

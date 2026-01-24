@@ -45,7 +45,7 @@ def getSubtitle_lang(release_title):
 
 def getQuality(release_title):
     release_title = release_title.lower()
-    if any(i in release_title for i in ['4k', '2160', "216o"]):
+    if any(i in release_title for i in ['4k', '2160', '216o', 'uhd']):
         quality = 4
     elif any(i in release_title for i in ["1080", "1o80", "108o", "1o8o"]):
         quality = 3
