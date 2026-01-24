@@ -373,10 +373,9 @@ class WatchlistPlayer(player):
             # Small delay to ensure video is playing
             xbmc.sleep(1000)
 
-            # Try to fetch using OpenSubtitles API
+            # Try to fetch using OpenSubtitles API (fully automatic)
             if opensubtitles.is_enabled():
-                # Get show info for search
-                title = getattr(self, 'anime_title', None) or self.mal_id
+                title = getattr(self, 'anime_title', None) or str(self.mal_id)
                 episode = getattr(self, 'episode', None)
 
                 success = opensubtitles.fetch_and_apply_subtitle(
@@ -388,10 +387,10 @@ class WatchlistPlayer(player):
 
                 if success:
                     self.showSubtitles(True)
-                    control.log('OpenSubtitles: Subtitle applied successfully')
+                    control.log('OpenSubtitles: Subtitle applied automatically')
                     return
 
-            # Fallback to Kodi's subtitle search dialog if API fails or not configured
+            # Fallback to Kodi dialog if API not configured or fails
             control.log('Falling back to Kodi subtitle search dialog')
             xbmc.executebuiltin('ActivateWindow(SubtitleSearch)')
         except Exception as e:
