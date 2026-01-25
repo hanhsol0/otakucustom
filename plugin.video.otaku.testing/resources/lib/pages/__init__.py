@@ -237,6 +237,9 @@ class Sources(GetSources):
             all_sources = {'cached': [], 'uncached': []}
 
         control.log(f"Nyaa returned: {len(all_sources.get('cached', []))} cached, {len(all_sources.get('uncached', []))} uncached", 'info')
+        # Log first few source names for debugging
+        for src in (all_sources.get('cached', []) + all_sources.get('uncached', []))[:3]:
+            control.log(f"  Nyaa source: {src.get('release_title', src.get('name', 'unknown'))}", 'info')
         self.torrentUnCacheSources += all_sources['uncached']
         self.torrentCacheSources += all_sources['cached']
         self.torrentSources += all_sources['cached'] + all_sources['uncached']
@@ -254,6 +257,9 @@ class Sources(GetSources):
             all_sources = {'cached': [], 'uncached': []}
 
         control.log(f"AnimeTosho returned: {len(all_sources.get('cached', []))} cached, {len(all_sources.get('uncached', []))} uncached", 'info')
+        # Log first few source names for debugging
+        for src in (all_sources.get('cached', []) + all_sources.get('uncached', []))[:3]:
+            control.log(f"  AnimeTosho source: {src.get('release_title', src.get('name', 'unknown'))}", 'info')
         self.torrentUnCacheSources += all_sources['uncached']
         self.torrentCacheSources += all_sources['cached']
         self.torrentSources += all_sources['cached'] + all_sources['uncached']
