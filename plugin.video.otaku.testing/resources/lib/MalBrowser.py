@@ -150,29 +150,17 @@ class MalBrowser(BrowserBase):
 
     def get_recommendations(self, mal_id, page):
         recommendations = database.get(self.get_base_res, 24, f'{self._BASE_URL}/anime/{mal_id}/recommendations')
-        get_meta.collect_meta(recommendations['data'])
+        # Use lightweight mode - skip heavy metadata fetching
+        get_meta.collect_meta(recommendations['data'], lightweight=True)
 
+        # Use entry data directly from recommendations - no extra API calls needed
         recommendation_res = []
-        count = 0
-        retry_limit = 3
-
         for recommendation in recommendations['data']:
             entry = recommendation.get('entry')
             if entry and entry.get('mal_id'):
-                retries = 0
-                while retries < retry_limit:
-                    res_data = database.get(self.get_base_res, 24, f"{self._BASE_URL}/anime/{entry['mal_id']}")
-                    if res_data is not None and 'data' in res_data:
-                        res_data['data']['votes'] = recommendation.get('votes')
-                        recommendation_res.append(res_data['data'])
-                        break
-                    else:
-                        retries += 1
-                        control.sleep(int(100 * retries))  # Reduced linear backoff
-
-                count += 1
-                if count % 3 == 0:
-                    control.sleep(1000)  # Ensure we do not exceed 3 requests per second
+                # Add votes to entry data and use it directly
+                entry['votes'] = recommendation.get('votes')
+                recommendation_res.append(entry)
 
         mapfunc = partial(self.base_mal_view, completed=self.open_completed())
         all_results = list(map(mapfunc, recommendation_res))
@@ -181,29 +169,16 @@ class MalBrowser(BrowserBase):
     def get_relations(self, mal_id):
         relations = database.get(self.get_base_res, 24, f'{self._BASE_URL}/anime/{mal_id}/relations')
         meta_ids = [{'mal_id': entry['mal_id']} for relation in relations['data'] for entry in relation['entry']]
-        get_meta.collect_meta(meta_ids)
+        # Use lightweight mode - skip heavy metadata fetching
+        get_meta.collect_meta(meta_ids, lightweight=True)
 
+        # Use entry data directly - no extra API calls needed
         relation_res = []
-        count = 0
-        retry_limit = 3
-
         for relation in relations['data']:
             for entry in relation['entry']:
                 if entry['type'] == 'anime':
-                    retries = 0
-                    while retries < retry_limit:
-                        res_data = database.get(self.get_base_res, 24, f"{self._BASE_URL}/anime/{entry['mal_id']}")
-                        if res_data is not None and 'data' in res_data:
-                            res_data['data']['relation'] = relation['relation']
-                            relation_res.append(res_data['data'])
-                            break
-                        else:
-                            retries += 1
-                            control.sleep(int(100 * retries))  # Reduced linear backoff
-
-                    count += 1
-                    if count % 3 == 0:
-                        control.sleep(1000)  # Ensure we do not exceed 3 requests per second
+                    entry['relation'] = relation['relation']
+                    relation_res.append(entry)
 
         mapfunc = partial(self.base_mal_view, completed=self.open_completed())
         all_results = list(map(mapfunc, relation_res))
