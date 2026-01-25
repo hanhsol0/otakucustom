@@ -24,6 +24,7 @@ class SyncDatabase:
         self.last_meta_update = '1.0.10'
         self.refresh_activites()
         self.check_database_version()
+        self._ensure_for_you_menu()
 
     def refresh_activites(self):
         with SQL(control.malSyncDB) as cursor:
@@ -104,6 +105,20 @@ class SyncDatabase:
             else:
                 menu.append(item)
             control.setStringList(config_key, menu)
+
+    def _ensure_for_you_menu(self):
+        """Ensure 'For You' is in the main menu (runs every startup)"""
+        menu = control.getStringList('menu.mainmenu.config')
+        if menu and 'for_you' not in menu:
+            # Insert after watch_history if present, otherwise after last_watched
+            if 'watch_history' in menu:
+                insert_index = menu.index('watch_history') + 1
+            elif 'last_watched' in menu:
+                insert_index = menu.index('last_watched') + 1
+            else:
+                insert_index = 0
+            menu.insert(insert_index, 'for_you')
+            control.setStringList('menu.mainmenu.config', menu)
 
     def _update_menu_config(self, config_key, last_watched_item, watch_history_item):
         """Helper method to update menu configurations with last_watched and watch_history items"""
