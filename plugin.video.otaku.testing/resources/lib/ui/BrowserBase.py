@@ -42,6 +42,8 @@ class BrowserBase(object):
 
     @staticmethod
     def duration_to_seconds(duration_str):
+        if not duration_str or not isinstance(duration_str, str):
+            return 0
         # Regular expressions to match hours, minutes, and seconds
         hours_pattern = re.compile(r'(\d+)\s*hr')
         minutes_pattern = re.compile(r'(\d+)\s*min')
