@@ -1210,7 +1210,12 @@
 				<setting id="opensubtitles.apikey" type="string" label="30452" help="30454">
 					<level>0</level>
 					<default></default>
-					<control type="edit" format="string"/>
+					<constraints>
+						<allowempty>true</allowempty>
+					</constraints>
+					<control type="edit" format="string">
+						<heading>30452</heading>
+					</control>
 					<dependencies>
 						<dependency type="visible" setting="opensubtitles.enable">true</dependency>
 					</dependencies>
