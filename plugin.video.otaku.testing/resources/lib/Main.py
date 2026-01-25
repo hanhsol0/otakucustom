@@ -214,8 +214,7 @@ def ANIMES_PAGE(payload, params):
 @Route('find_recommendations/*')
 def FIND_RECOMMENDATIONS(payload, params):
     path, mal_id, eps_watched = payload.rsplit("/")
-    from resources.lib.windows import show_info_wall
-    show_info_wall.show_recommendations(mal_id)
+    control.draw_items(BROWSER.get_recommendations(mal_id, 1), 'tvshows')
 
 
 @Route('for_you')

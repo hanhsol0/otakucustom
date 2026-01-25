@@ -73,7 +73,7 @@
             <visible>String.IsEqual(Container(1000).ListItem.Property(media_type),movie)</visible>
             <left>50</left>
             <top>90</top>
-            <width>50</width>
+            <width>60</width>
             <height>22</height>
             <texture>white.png</texture>
             <colordiffuse>FFFF6B6B</colordiffuse>
@@ -82,7 +82,7 @@
             <visible>String.IsEqual(Container(1000).ListItem.Property(media_type),movie)</visible>
             <left>50</left>
             <top>90</top>
-            <width>50</width>
+            <width>60</width>
             <height>22</height>
             <font>font10</font>
             <textcolor>FFFFFFFF</textcolor>
@@ -93,19 +93,19 @@
 
         <!-- TV badge -->
         <control type="image">
-            <visible>!String.IsEqual(Container(1000).ListItem.Property(media_type),movie)</visible>
+            <visible>String.IsEqual(Container(1000).ListItem.Property(media_type),tv)</visible>
             <left>50</left>
             <top>90</top>
-            <width>30</width>
+            <width>35</width>
             <height>22</height>
             <texture>white.png</texture>
             <colordiffuse>FF4da6ff</colordiffuse>
         </control>
         <control type="label">
-            <visible>!String.IsEqual(Container(1000).ListItem.Property(media_type),movie)</visible>
+            <visible>String.IsEqual(Container(1000).ListItem.Property(media_type),tv)</visible>
             <left>50</left>
             <top>90</top>
-            <width>30</width>
+            <width>35</width>
             <height>22</height>
             <font>font10</font>
             <textcolor>FFFFFFFF</textcolor>
@@ -537,6 +537,29 @@
                         <label>MOVIE</label>
                     </control>
 
+                    <!-- TV badge -->
+                    <control type="image">
+                        <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
+                        <left>280</left>
+                        <top>18</top>
+                        <width>40</width>
+                        <height>24</height>
+                        <texture>white.png</texture>
+                        <colordiffuse>EE4da6ff</colordiffuse>
+                    </control>
+                    <control type="label">
+                        <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
+                        <left>280</left>
+                        <top>18</top>
+                        <width>40</width>
+                        <height>24</height>
+                        <font>font10</font>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>TV</label>
+                    </control>
+
                     <!-- Title below poster -->
                     <control type="label">
                         <left>10</left>
@@ -605,6 +628,29 @@
                         <align>center</align>
                         <aligny>center</aligny>
                         <label>MOVIE</label>
+                    </control>
+
+                    <!-- TV badge -->
+                    <control type="image">
+                        <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
+                        <left>280</left>
+                        <top>18</top>
+                        <width>40</width>
+                        <height>24</height>
+                        <texture>white.png</texture>
+                        <colordiffuse>FF4da6ff</colordiffuse>
+                    </control>
+                    <control type="label">
+                        <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
+                        <left>280</left>
+                        <top>18</top>
+                        <width>40</width>
+                        <height>24</height>
+                        <font>font10</font>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>TV</label>
                     </control>
 
                     <!-- Title below poster -->
