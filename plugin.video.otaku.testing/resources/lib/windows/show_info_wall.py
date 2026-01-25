@@ -12,14 +12,21 @@ def _format_items_for_wall(items):
 
         info = item.get('info', {})
 
+        # Get poster from multiple possible sources
+        poster = item.get('poster') or item.get('image') or ''
+
+        # Debug: log if poster is missing
+        if not poster:
+            control.log(f"[INFO_WALL] Missing poster for: {item.get('name', 'Unknown')}", "warning")
+
         formatted_item = {
             'mal_id': info.get('UniqueIDs', {}).get('mal_id', ''),
             'id': info.get('UniqueIDs', {}).get('mal_id', ''),
             'release_title': item.get('name', ''),
-            'poster': item.get('poster', ''),
-            'image': item.get('image', ''),
-            'fanart': item.get('fanart', ''),
-            'banner': item.get('banner', ''),
+            'poster': poster,
+            'image': poster,
+            'fanart': item.get('fanart') or poster,
+            'banner': item.get('banner') or poster,
             'plot': info.get('plot', ''),
             'genre': info.get('genre', []),
             'studio': info.get('studio', []),

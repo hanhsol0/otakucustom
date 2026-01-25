@@ -1586,6 +1586,8 @@ class MalBrowser(BrowserBase):
         # Handle different image structures (full anime data vs minimal entry data)
         images = res.get('images', {})
         image = images.get('webp', {}).get('large_image_url') or images.get('jpg', {}).get('large_image_url') or ''
+        if not image:
+            control.log(f"[MAL] Missing image for {title} (mal_id={mal_id}), images={images}", "warning")
         base = {
             "name": title,
             "url": f'animes/{mal_id}/',
