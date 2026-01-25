@@ -375,24 +375,48 @@ class WatchlistPlayer(player):
 
             # Try to fetch using OpenSubtitles API (fully automatic)
             if opensubtitles.is_enabled():
-                title = getattr(self, 'anime_title', None) or str(self.mal_id)
+                # Get actual anime title from database
+                import pickle
+                show = database.get_show(self.mal_id)
+                title = None
+                if show:
+                    try:
+                        kodi_meta = pickle.loads(show['kodi_meta'])
+                        title = kodi_meta.get('title_userPreferred') or kodi_meta.get('title') or kodi_meta.get('name')
+                    except Exception:
+                        pass
+
+                if not title:
+                    title = str(self.mal_id)
+                    control.log(f'OpenSubtitles: Could not get title, using mal_id: {title}', 'warning')
+                else:
+                    control.log(f'OpenSubtitles: Searching for "{title}"')
+
                 episode = getattr(self, 'episode', None)
+
+                # Get video URL for hash-based search
+                video_url = None
+                try:
+                    video_url = self.getPlayingFile()
+                except Exception:
+                    video_url = self.path
 
                 success = opensubtitles.fetch_and_apply_subtitle(
                     player=self,
                     title=title,
                     episode=episode,
-                    language=preferred_lang
+                    language=preferred_lang,
+                    video_url=video_url
                 )
 
                 if success:
                     self.showSubtitles(True)
                     control.log('OpenSubtitles: Subtitle applied automatically')
                     return
-
-            # Fallback to Kodi dialog if API not configured or fails
-            control.log('Falling back to Kodi subtitle search dialog')
-            xbmc.executebuiltin('ActivateWindow(SubtitleSearch)')
+                else:
+                    control.log('OpenSubtitles: No subtitles found or download failed')
+            else:
+                control.log('OpenSubtitles not configured - continuing without external subs')
         except Exception as e:
             control.log(f'Error fetching external subtitles: {e}', 'error')
 
