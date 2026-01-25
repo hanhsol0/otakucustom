@@ -255,14 +255,16 @@ class Sources(GetSources):
             self.embedSources += animepahe.Sources().get_sources(mal_id, episode)
         else:
             self.embedSources += database.get(animepahe.Sources().get_sources, 8, mal_id, episode, key='animepahe')
-        self.remainingProviders.remove('animepahe')
+        if 'animepahe' in self.remainingProviders:
+            self.remainingProviders.remove('animepahe')
 
     def animix_worker(self, mal_id, episode, rescrape):
         if rescrape:
             self.embedSources += animixplay.Sources().get_sources(mal_id, episode)
         else:
             self.embedSources += database.get(animixplay.Sources().get_sources, 8, mal_id, episode, key='animix')
-        self.remainingProviders.remove('animix')
+        if 'animix' in self.remainingProviders:
+            self.remainingProviders.remove('animix')
 
     def aniwave_worker(self, mal_id, episode, rescrape):
         if rescrape:
@@ -278,7 +280,8 @@ class Sources(GetSources):
                 if x['skip'].get('outro') and x['skip']['outro']['start'] != 0:
                     control.setInt('aniwave.skipoutro.start', int(x['skip']['outro']['start']))
                     control.setInt('aniwave.skipoutro.end', int(x['skip']['outro']['end']))
-        self.remainingProviders.remove('aniwave')
+        if 'aniwave' in self.remainingProviders:
+            self.remainingProviders.remove('aniwave')
 
     # def gogo_worker(self, mal_id, episode, rescrape):
     #     if rescrape:
@@ -301,14 +304,16 @@ class Sources(GetSources):
                 if x['skip'].get('outro') and x['skip']['outro']['start'] != 0:
                     control.setInt('hianime.skipoutro.start', int(x['skip']['outro']['start']))
                     control.setInt('hianime.skipoutro.end', int(x['skip']['outro']['end']))
-        self.remainingProviders.remove('hianime')
+        if 'hianime' in self.remainingProviders:
+            self.remainingProviders.remove('hianime')
 
     def watchnixtoons2_worker(self, mal_id, episode, media_type, rescrape):
         if rescrape:
             self.embedSources += watchnixtoons2.Sources().get_sources(mal_id, episode, media_type)
         else:
             self.embedSources += database.get(watchnixtoons2.Sources().get_sources, 8, mal_id, episode, media_type, key='watchnixtoons2')
-        self.remainingProviders.remove('watchnixtoons2')
+        if 'watchnixtoons2' in self.remainingProviders:
+            self.remainingProviders.remove('watchnixtoons2')
 
     # Local & Cloud #
     def user_local_inspection(self, query, mal_id, episode):
