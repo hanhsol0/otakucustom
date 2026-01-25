@@ -161,6 +161,9 @@ class Sources(GetSources):
         else:
             if 'aniwave' in self.remainingProviders:
                 self.remainingProviders.remove('aniwave')
+            # Still fetch skip times in background for debrid priority mode
+            if debrid_priority and control.getBool('provider.aniwave'):
+                threading.Thread(target=self._fetch_skip_times_aniwave, args=(mal_id, episode, rescrape), daemon=True).start()
 
         if not debrid_priority and control.getBool('provider.hianime'):
             t = threading.Thread(target=self.hianime_worker, args=(mal_id, episode, rescrape))
@@ -169,6 +172,9 @@ class Sources(GetSources):
         else:
             if 'hianime' in self.remainingProviders:
                 self.remainingProviders.remove('hianime')
+            # Still fetch skip times in background for debrid priority mode
+            if debrid_priority and control.getBool('provider.hianime'):
+                threading.Thread(target=self._fetch_skip_times_hianime, args=(mal_id, episode, rescrape), daemon=True).start()
 
         if not debrid_priority and control.getBool('provider.watchnixtoons2'):
             t = threading.Thread(target=self.watchnixtoons2_worker, args=(mal_id, episode, media_type, rescrape))
@@ -331,6 +337,44 @@ class Sources(GetSources):
         season = episode_data.get('season') if episode_data else None
         self.cloud_files += debrid_cloudfiles.Sources().get_sources(query, mal_id, episode, season)
         self.remainingProviders.remove('Cloud Inspection')
+
+    def _fetch_skip_times_aniwave(self, mal_id, episode, rescrape):
+        """Fetch skip times from aniwave without adding sources (for debrid priority mode)"""
+        try:
+            if rescrape:
+                aniwave_sources = aniwave.Sources().get_sources(mal_id, episode)
+            else:
+                aniwave_sources = database.get(aniwave.Sources().get_sources, 8, mal_id, episode, key='aniwave')
+            for x in aniwave_sources:
+                if x.get('skip'):
+                    if x['skip'].get('intro') and x['skip']['intro']['start'] != 0:
+                        control.setInt('aniwave.skipintro.start', int(x['skip']['intro']['start']))
+                        control.setInt('aniwave.skipintro.end', int(x['skip']['intro']['end']))
+                    if x['skip'].get('outro') and x['skip']['outro']['start'] != 0:
+                        control.setInt('aniwave.skipoutro.start', int(x['skip']['outro']['start']))
+                        control.setInt('aniwave.skipoutro.end', int(x['skip']['outro']['end']))
+                    break  # Only need first source with skip data
+        except Exception as e:
+            control.log(f'Error fetching aniwave skip times: {e}', 'warning')
+
+    def _fetch_skip_times_hianime(self, mal_id, episode, rescrape):
+        """Fetch skip times from hianime without adding sources (for debrid priority mode)"""
+        try:
+            if rescrape:
+                hianime_sources = hianime.Sources().get_sources(mal_id, episode)
+            else:
+                hianime_sources = database.get(hianime.Sources().get_sources, 8, mal_id, episode, key='hianime')
+            for x in hianime_sources:
+                if x.get('skip'):
+                    if x['skip'].get('intro') and x['skip']['intro']['start'] != 0:
+                        control.setInt('hianime.skipintro.start', int(x['skip']['intro']['start']))
+                        control.setInt('hianime.skipintro.end', int(x['skip']['intro']['end']))
+                    if x['skip'].get('outro') and x['skip']['outro']['start'] != 0:
+                        control.setInt('hianime.skipoutro.start', int(x['skip']['outro']['start']))
+                        control.setInt('hianime.skipoutro.end', int(x['skip']['outro']['end']))
+                    break  # Only need first source with skip data
+        except Exception as e:
+            control.log(f'Error fetching hianime skip times: {e}', 'warning')
 
     def _scrape_embeds_fallback(self, mal_id, episode, media_type, rescrape):
         """Fallback to scrape embeds when no cached debrid sources found in priority mode"""
