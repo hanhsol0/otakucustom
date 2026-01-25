@@ -403,20 +403,34 @@ class WatchlistPlayer(player):
             preffeded_subtitle_type = types[self.preferred_subtitle_type]
             preffeded_subtitle_keyword = keywords[self.preferred_subtitle_keyword]
 
-            # Set preferred audio stream
+            # Get current audio stream to avoid unnecessary switching
+            current_audio_stream = None
+            try:
+                current_audio_stream = self.getAudioStream()
+            except:
+                pass
+
+            # Set preferred audio stream (only if different from current)
+            target_audio_index = None
             for stream in audio_streams:
                 if stream['language'] == preferred_audio_streams:
-                    self.setAudioStream(stream['index'])
+                    target_audio_index = stream['index']
                     break
             else:
                 # If no preferred audio stream is found, set to the default audio stream
                 for stream in audio_streams:
                     if stream.get('isdefault', False):
-                        self.setAudioStream(stream['index'])
+                        target_audio_index = stream['index']
                         break
                 else:
                     # If no default audio stream is found, set to the first available audio stream
-                    self.setAudioStream(audio_streams[0]['index'])
+                    target_audio_index = audio_streams[0]['index']
+
+            if target_audio_index is not None and target_audio_index != current_audio_stream:
+                self.setAudioStream(target_audio_index)
+                control.log(f'Audio stream changed from {current_audio_stream} to {target_audio_index}', 'info')
+            else:
+                control.log(f'Audio stream already set to {current_audio_stream}, skipping', 'info')
 
             # Set preferred subtitle stream
             subtitle_int = None
@@ -525,9 +539,19 @@ class WatchlistPlayer(player):
                     # If no default subtitle stream is found, set to the first available subtitle stream
                     subtitle_int = subtitle_streams[0]['index'] if subtitle_streams else None
 
+            # Get current subtitle stream to avoid unnecessary switching
+            current_subtitle_stream = None
+            try:
+                current_subtitle_stream = self.getSubtitleStream()
+            except:
+                pass
+
             if subtitle_int is not None:
-                control.log(f'Setting subtitle stream to index {subtitle_int}', 'info')
-                self.setSubtitleStream(subtitle_int)
+                if subtitle_int != current_subtitle_stream:
+                    control.log(f'Setting subtitle stream to index {subtitle_int} (was {current_subtitle_stream})', 'info')
+                    self.setSubtitleStream(subtitle_int)
+                else:
+                    control.log(f'Subtitle stream already set to {subtitle_int}, skipping', 'info')
             else:
                 control.log('No subtitle stream selected (subtitle_int is None)', 'info')
 
