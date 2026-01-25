@@ -52,7 +52,7 @@
         <control type="image">
             <left>30</left>
             <top>70</top>
-            <width>430</width>
+            <width>580</width>
             <height>940</height>
             <texture>white.png</texture>
             <colordiffuse>88000000</colordiffuse>
@@ -118,7 +118,7 @@
         <control type="label">
             <left>245</left>
             <top>90</top>
-            <width>200</width>
+            <width>350</width>
             <height>30</height>
             <font>font14</font>
             <textcolor>FFFFFFFF</textcolor>
@@ -131,7 +131,7 @@
         <control type="label">
             <left>245</left>
             <top>122</top>
-            <width>200</width>
+            <width>350</width>
             <height>20</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
@@ -143,7 +143,7 @@
         <control type="label">
             <left>245</left>
             <top>142</top>
-            <width>200</width>
+            <width>350</width>
             <height>20</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
@@ -155,7 +155,7 @@
         <control type="label">
             <left>245</left>
             <top>165</top>
-            <width>200</width>
+            <width>350</width>
             <height>40</height>
             <font>font10</font>
             <textcolor>FF4da6ff</textcolor>
@@ -167,7 +167,7 @@
         <control type="image">
             <left>245</left>
             <top>210</top>
-            <width>50</width>
+            <width>60</width>
             <height>38</height>
             <texture>white.png</texture>
             <colordiffuse>FF4da6ff</colordiffuse>
@@ -175,7 +175,7 @@
         <control type="label">
             <left>245</left>
             <top>210</top>
-            <width>50</width>
+            <width>60</width>
             <height>38</height>
             <font>font14</font>
             <textcolor>FFFFFFFF</textcolor>
@@ -186,7 +186,7 @@
         <control type="label">
             <left>245</left>
             <top>250</top>
-            <width>50</width>
+            <width>60</width>
             <height>16</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
@@ -197,18 +197,18 @@
         <!-- MAL Score -->
         <control type="image">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
-            <left>305</left>
+            <left>315</left>
             <top>210</top>
-            <width>50</width>
+            <width>60</width>
             <height>38</height>
             <texture>white.png</texture>
             <colordiffuse>FF2E51A2</colordiffuse>
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
-            <left>305</left>
+            <left>315</left>
             <top>210</top>
-            <width>50</width>
+            <width>60</width>
             <height>38</height>
             <font>font14</font>
             <textcolor>FFFFFFFF</textcolor>
@@ -218,9 +218,9 @@
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
-            <left>305</left>
+            <left>315</left>
             <top>250</top>
-            <width>50</width>
+            <width>60</width>
             <height>16</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
@@ -231,18 +231,18 @@
         <!-- IMDB Score -->
         <control type="image">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
-            <left>365</left>
+            <left>385</left>
             <top>210</top>
-            <width>50</width>
+            <width>60</width>
             <height>38</height>
             <texture>white.png</texture>
             <colordiffuse>FFF5C518</colordiffuse>
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
-            <left>365</left>
+            <left>385</left>
             <top>210</top>
-            <width>50</width>
+            <width>60</width>
             <height>38</height>
             <font>font14</font>
             <textcolor>FF000000</textcolor>
@@ -252,9 +252,9 @@
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
-            <left>365</left>
+            <left>385</left>
             <top>250</top>
-            <width>50</width>
+            <width>60</width>
             <height>16</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
@@ -267,7 +267,7 @@
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rec_count))</visible>
             <left>245</left>
             <top>275</top>
-            <width>200</width>
+            <width>350</width>
             <height>20</height>
             <font>font10</font>
             <textcolor>FF4da6ff</textcolor>
@@ -279,7 +279,7 @@
         <control type="textbox">
             <left>50</left>
             <top>365</top>
-            <width>390</width>
+            <width>540</width>
             <height>620</height>
             <font>font12</font>
             <textcolor>CCFFFFFF</textcolor>
@@ -293,16 +293,16 @@
         <!-- ═══════════════════════════════════════════════════════════════ -->
 
         <control type="group">
-            <left>650</left>
+            <left>620</left>
             <top>30</top>
-            <width>1230</width>
+            <width>1280</width>
             <height>1020</height>
 
             <!-- Header: Title + Filter Toggle -->
             <control type="group">
                 <left>0</left>
                 <top>0</top>
-                <width>1230</width>
+                <width>1280</width>
                 <height>50</height>
 
                 <!-- Title -->
@@ -464,7 +464,7 @@
 
                 <!-- Item count -->
                 <control type="label">
-                    <left>950</left>
+                    <left>1000</left>
                     <top>10</top>
                     <width>280</width>
                     <height>30</height>
@@ -482,7 +482,7 @@
             <control type="panel" id="1000">
                 <left>0</left>
                 <top>60</top>
-                <width>1230</width>
+                <width>1280</width>
                 <height>960</height>
                 <onup>100</onup>
                 <ondown>1000</ondown>
@@ -640,15 +640,15 @@
 
         <control type="group">
             <visible>String.IsEqual(Window().Property(item.count),0 titles)</visible>
-            <left>650</left>
+            <left>620</left>
             <top>400</top>
-            <width>1230</width>
+            <width>1280</width>
             <height>200</height>
 
             <control type="label">
                 <left>0</left>
                 <top>0</top>
-                <width>1230</width>
+                <width>1280</width>
                 <height>40</height>
                 <font>font16</font>
                 <textcolor>88FFFFFF</textcolor>
@@ -658,7 +658,7 @@
             <control type="label">
                 <left>0</left>
                 <top>50</top>
-                <width>1230</width>
+                <width>1280</width>
                 <height>30</height>
                 <font>font12</font>
                 <textcolor>55FFFFFF</textcolor>
