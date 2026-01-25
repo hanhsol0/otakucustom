@@ -544,16 +544,31 @@ class WatchlistPlayer(player):
                             break
             else:
                 # No type filter or keyword filter - prefer full dialogue subs over signs/songs
-                signs_only_keywords = ['sign', 'song', 's&s', 'forced']
+                import re
+                # Match patterns like (Signs), [Signs], Signs Only, Signs/Songs, S&S, etc.
+                signs_only_pattern = re.compile(
+                    r'[\(\[]?\s*(signs?|songs?|s&s|signs?\s*[/&]\s*songs?)\s*[\)\]]?'
+                    r'|signs?\s+only|songs?\s+only',
+                    re.IGNORECASE
+                )
+
+                def is_signs_only(name):
+                    """Check if subtitle is signs/songs only (not full dialogue)"""
+                    if not name:
+                        return False
+                    # If it has "dialogue" or "full", it's not signs-only
+                    if re.search(r'dialogue|full', name, re.IGNORECASE):
+                        return False
+                    # Check for signs/songs patterns
+                    return bool(signs_only_pattern.search(name))
 
                 # First pass: find preferred language, skip signs-only subs
                 for sub in subtitle_streams:
                     if sub['language'] == preferred_subtitle_lang:
-                        sub_name_lower = sub.get('name', '').lower()
-                        # Skip if it's a signs/songs only track
-                        if not any(kw in sub_name_lower for kw in signs_only_keywords):
+                        sub_name = sub.get('name', '')
+                        if not is_signs_only(sub_name):
                             subtitle_int = sub['index']
-                            control.log(f'Selected full dialogue sub: {sub.get("name")}', 'info')
+                            control.log(f'Selected full dialogue sub: {sub_name}', 'info')
                             break
 
                 # Second pass: if no full dialogue found, take any with preferred language
