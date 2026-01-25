@@ -134,126 +134,59 @@
                 <label>$INFO[Container(1000).ListItem.Property(genres)]</label>
             </control>
 
-            <!-- Ratings Row -->
+            <!-- Rating Section -->
             <control type="group">
                 <left>255</left>
                 <top>115</top>
                 <width>310</width>
-                <height>100</height>
+                <height>90</height>
 
-                <!-- AniList Score -->
+                <!-- AniList Score - Large -->
                 <control type="group">
+                    <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating))</visible>
                     <left>0</left>
                     <top>0</top>
-                    <width>90</width>
-                    <height>50</height>
+                    <width>120</width>
+                    <height>55</height>
 
                     <control type="image">
                         <left>0</left>
                         <top>0</top>
-                        <width>50</width>
-                        <height>40</height>
+                        <width>65</width>
+                        <height>45</height>
                         <texture>white.png</texture>
                         <colordiffuse>FF4da6ff</colordiffuse>
                     </control>
                     <control type="label">
                         <left>0</left>
                         <top>0</top>
-                        <width>50</width>
-                        <height>40</height>
-                        <font>font14</font>
+                        <width>65</width>
+                        <height>45</height>
+                        <font>font16</font>
                         <textcolor>FFFFFFFF</textcolor>
                         <align>center</align>
                         <aligny>center</aligny>
                         <label>[B]$INFO[Container(1000).ListItem.Property(rating)][/B]</label>
                     </control>
                     <control type="label">
-                        <left>0</left>
-                        <top>42</top>
-                        <width>50</width>
+                        <left>75</left>
+                        <top>5</top>
+                        <width>150</width>
                         <height>18</height>
                         <font>font10</font>
-                        <textcolor>88FFFFFF</textcolor>
-                        <align>center</align>
-                        <label>AniList</label>
-                    </control>
-                </control>
-
-                <!-- MAL Score -->
-                <control type="group">
-                    <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
-                    <left>60</left>
-                    <top>0</top>
-                    <width>90</width>
-                    <height>50</height>
-
-                    <control type="image">
-                        <left>0</left>
-                        <top>0</top>
-                        <width>50</width>
-                        <height>40</height>
-                        <texture>white.png</texture>
-                        <colordiffuse>FF2E51A2</colordiffuse>
+                        <textcolor>AAFFFFFF</textcolor>
+                        <align>left</align>
+                        <label>AniList Score</label>
                     </control>
                     <control type="label">
-                        <left>0</left>
-                        <top>0</top>
-                        <width>50</width>
-                        <height>40</height>
-                        <font>font14</font>
-                        <textcolor>FFFFFFFF</textcolor>
-                        <align>center</align>
-                        <aligny>center</aligny>
-                        <label>[B]$INFO[Container(1000).ListItem.Property(rating_mal)][/B]</label>
-                    </control>
-                    <control type="label">
-                        <left>0</left>
-                        <top>42</top>
-                        <width>50</width>
+                        <left>75</left>
+                        <top>24</top>
+                        <width>150</width>
                         <height>18</height>
                         <font>font10</font>
-                        <textcolor>88FFFFFF</textcolor>
-                        <align>center</align>
-                        <label>MAL</label>
-                    </control>
-                </control>
-
-                <!-- IMDB Score -->
-                <control type="group">
-                    <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
-                    <left>120</left>
-                    <top>0</top>
-                    <width>90</width>
-                    <height>50</height>
-
-                    <control type="image">
-                        <left>0</left>
-                        <top>0</top>
-                        <width>50</width>
-                        <height>40</height>
-                        <texture>white.png</texture>
-                        <colordiffuse>FFF5C518</colordiffuse>
-                    </control>
-                    <control type="label">
-                        <left>0</left>
-                        <top>0</top>
-                        <width>50</width>
-                        <height>40</height>
-                        <font>font14</font>
-                        <textcolor>FF000000</textcolor>
-                        <align>center</align>
-                        <aligny>center</aligny>
-                        <label>[B]$INFO[Container(1000).ListItem.Property(rating_imdb)][/B]</label>
-                    </control>
-                    <control type="label">
-                        <left>0</left>
-                        <top>42</top>
-                        <width>50</width>
-                        <height>18</height>
-                        <font>font10</font>
-                        <textcolor>88FFFFFF</textcolor>
-                        <align>center</align>
-                        <label>IMDB</label>
+                        <textcolor>66FFFFFF</textcolor>
+                        <align>left</align>
+                        <label>out of 100</label>
                     </control>
                 </control>
 
@@ -261,11 +194,11 @@
                 <control type="label">
                     <visible>!String.IsEmpty(Container(1000).ListItem.Property(rec_count))</visible>
                     <left>0</left>
-                    <top>70</top>
+                    <top>55</top>
                     <width>310</width>
                     <height>20</height>
                     <font>font10</font>
-                    <textcolor>66FFFFFF</textcolor>
+                    <textcolor>FF4da6ff</textcolor>
                     <align>left</align>
                     <label>Recommended by $INFO[Container(1000).ListItem.Property(rec_count)] of your anime</label>
                 </control>
@@ -473,7 +406,7 @@
             </control>
 
             <!-- ─────────────────────────────────────────────────────────── -->
-            <!-- POSTER GRID: 5 columns x 3 rows visible                     -->
+            <!-- POSTER GRID: 4 columns x 3 rows with larger posters         -->
             <!-- ─────────────────────────────────────────────────────────── -->
 
             <control type="panel" id="1000">
@@ -489,24 +422,24 @@
                 <scrolltime tween="sine" easing="out">200</scrolltime>
                 <pagecontrol>-</pagecontrol>
 
-                <!-- Unfocused poster with title below -->
-                <itemlayout height="320" width="240">
+                <!-- Unfocused poster with title below - LARGER SIZE -->
+                <itemlayout height="355" width="300">
                     <!-- Poster shadow -->
                     <control type="image">
-                        <left>8</left>
-                        <top>8</top>
-                        <width>224</width>
-                        <height>264</height>
+                        <left>10</left>
+                        <top>10</top>
+                        <width>280</width>
+                        <height>295</height>
                         <texture>white.png</texture>
                         <colordiffuse>33FFFFFF</colordiffuse>
                     </control>
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>5</left>
-                        <top>5</top>
-                        <width>230</width>
-                        <height>270</height>
+                        <left>7</left>
+                        <top>7</top>
+                        <width>286</width>
+                        <height>301</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
                         <aspectratio>scale</aspectratio>
                     </control>
@@ -514,33 +447,33 @@
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>185</left>
-                        <top>12</top>
-                        <width>45</width>
+                        <left>225</left>
+                        <top>14</top>
+                        <width>60</width>
                         <height>24</height>
                         <texture>white.png</texture>
                         <colordiffuse>EEFF6B6B</colordiffuse>
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>185</left>
-                        <top>12</top>
-                        <width>45</width>
+                        <left>225</left>
+                        <top>14</top>
+                        <width>60</width>
                         <height>24</height>
                         <font>font10</font>
                         <textcolor>FFFFFFFF</textcolor>
                         <align>center</align>
                         <aligny>center</aligny>
-                        <label>M</label>
+                        <label>MOVIE</label>
                     </control>
 
                     <!-- Title below poster -->
                     <control type="label">
-                        <left>5</left>
-                        <top>280</top>
-                        <width>230</width>
-                        <height>18</height>
-                        <font>font10</font>
+                        <left>7</left>
+                        <top>312</top>
+                        <width>286</width>
+                        <height>20</height>
+                        <font>font12</font>
                         <textcolor>AAFFFFFF</textcolor>
                         <align>center</align>
                         <label>$INFO[ListItem.Property(release_title)]</label>
@@ -548,10 +481,10 @@
 
                     <!-- Year below title -->
                     <control type="label">
-                        <left>5</left>
-                        <top>298</top>
-                        <width>230</width>
-                        <height>16</height>
+                        <left>7</left>
+                        <top>332</top>
+                        <width>286</width>
+                        <height>18</height>
                         <font>font10</font>
                         <textcolor>55FFFFFF</textcolor>
                         <align>center</align>
@@ -559,24 +492,24 @@
                     </control>
                 </itemlayout>
 
-                <!-- Focused poster: Blue glow border with title -->
-                <focusedlayout height="320" width="240">
+                <!-- Focused poster: Blue glow border with title - LARGER SIZE -->
+                <focusedlayout height="355" width="300">
                     <!-- Glow effect -->
                     <control type="image">
                         <left>0</left>
                         <top>0</top>
-                        <width>240</width>
-                        <height>280</height>
+                        <width>300</width>
+                        <height>315</height>
                         <texture>white.png</texture>
                         <colordiffuse>FF4da6ff</colordiffuse>
                     </control>
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>5</left>
-                        <top>5</top>
-                        <width>230</width>
-                        <height>270</height>
+                        <left>7</left>
+                        <top>7</top>
+                        <width>286</width>
+                        <height>301</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
                         <aspectratio>scale</aspectratio>
                     </control>
@@ -584,33 +517,33 @@
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>185</left>
-                        <top>12</top>
-                        <width>45</width>
+                        <left>225</left>
+                        <top>14</top>
+                        <width>60</width>
                         <height>24</height>
                         <texture>white.png</texture>
                         <colordiffuse>FFFF6B6B</colordiffuse>
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>185</left>
-                        <top>12</top>
-                        <width>45</width>
+                        <left>225</left>
+                        <top>14</top>
+                        <width>60</width>
                         <height>24</height>
                         <font>font10</font>
                         <textcolor>FFFFFFFF</textcolor>
                         <align>center</align>
                         <aligny>center</aligny>
-                        <label>M</label>
+                        <label>MOVIE</label>
                     </control>
 
                     <!-- Title below poster -->
                     <control type="label">
-                        <left>5</left>
-                        <top>280</top>
-                        <width>230</width>
-                        <height>18</height>
-                        <font>font10</font>
+                        <left>7</left>
+                        <top>318</top>
+                        <width>286</width>
+                        <height>20</height>
+                        <font>font12</font>
                         <textcolor>FFFFFFFF</textcolor>
                         <align>center</align>
                         <label>[B]$INFO[ListItem.Property(release_title)][/B]</label>
@@ -618,10 +551,10 @@
 
                     <!-- Year below title -->
                     <control type="label">
-                        <left>5</left>
-                        <top>298</top>
-                        <width>230</width>
-                        <height>16</height>
+                        <left>7</left>
+                        <top>338</top>
+                        <width>286</width>
+                        <height>18</height>
                         <font>font10</font>
                         <textcolor>88FFFFFF</textcolor>
                         <align>center</align>
