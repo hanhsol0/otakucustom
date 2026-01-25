@@ -222,6 +222,9 @@ class Sources(GetSources):
             self.return_data = []
         else:
             self.return_data = self.sortSources(self.torrentSources, self.embedSources, self.cloud_files, self.local_files, media_type, duration)
+            # Log first 5 sources after sorting for debugging autoplay selection
+            for i, src in enumerate(self.return_data[:5]):
+                control.log(f"Sorted source #{i+1}: quality={src.get('quality')} type={src.get('type')} title={src.get('release_title', '')[:60]}", 'info')
         self.close()
         return self.return_data
 
