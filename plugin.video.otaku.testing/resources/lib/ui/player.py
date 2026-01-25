@@ -556,11 +556,18 @@ class WatchlistPlayer(player):
                     subtitle_int = 0
 
             if subtitle_int is not None:
+                control.log(f'Setting subtitle stream to index {subtitle_int}')
                 self.setSubtitleStream(subtitle_int)
+            else:
+                control.log('No subtitle stream selected (subtitle_int is None)', 'warning')
+
+            # Get list of available audio languages
+            audio_langs = [s.get('language', '') for s in audio_streams]
 
             # Enable and Disable Subtitles based on audio streams
             if len(audio_streams) == 1:
-                if "jpn" not in audio_streams:
+                if "jpn" not in audio_langs:
+                    # Single non-Japanese audio (likely dub)
                     if control.getBool('general.dubsubtitles'):
                         if preferred_subtitle_lang == "none":
                             self.showSubtitles(False)
@@ -568,8 +575,8 @@ class WatchlistPlayer(player):
                             self.showSubtitles(True)
                     else:
                         self.showSubtitles(False)
-
-                if "eng" not in audio_streams:
+                elif "jpn" in audio_langs:
+                    # Single Japanese audio - show subs unless preference is none
                     if preferred_subtitle_lang == "none":
                         self.showSubtitles(False)
                     else:
@@ -590,6 +597,8 @@ class WatchlistPlayer(player):
                         self.showSubtitles(False)
                     else:
                         self.showSubtitles(True)
+
+            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}')
 
     def process_aniskip(self):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
