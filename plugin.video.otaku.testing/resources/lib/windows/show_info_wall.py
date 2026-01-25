@@ -6,7 +6,7 @@ from resources.lib.ui import control
 def _format_items_for_wall(items):
     """Convert browser items to info wall format."""
     formatted = []
-    for item in items:
+    for idx, item in enumerate(items):
         if not item:
             continue
 
@@ -14,6 +14,11 @@ def _format_items_for_wall(items):
 
         # Get poster from multiple possible sources
         poster = item.get('poster') or item.get('image') or ''
+
+        # Debug: log first item's structure and poster
+        if idx == 0:
+            control.log(f"[INFO_WALL] First item keys: {list(item.keys())}", "info")
+            control.log(f"[INFO_WALL] First item poster type: {type(poster)}, value: {poster[:100] if isinstance(poster, str) else poster}", "info")
 
         # Debug: log if poster is missing
         if not poster:
