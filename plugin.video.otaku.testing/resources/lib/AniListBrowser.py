@@ -1643,6 +1643,14 @@ class AniListBrowser(BrowserBase):
                 desc = desc.replace('<b>', '[B]').replace('</b>', '[/B]')
                 desc = desc.replace('<br>', '[CR]').replace('\n', '')
 
+            # Get MAL score - convert AniList 100-scale to 10-scale
+            rating_mal = ''
+            if res.get('meanScore'):
+                rating_mal = str(round(res.get('meanScore', 0) / 10, 1))
+
+            # IMDB score from kodi_meta if available
+            rating_imdb = kodi_meta.get('rating_imdb', '') if kodi_meta else ''
+
             # Build window item
             item = {
                 'id': mal_id,
@@ -1659,6 +1667,8 @@ class AniListBrowser(BrowserBase):
                 'episodes': str(res.get('episodes', '')),
                 'year': str(res.get('seasonYear', '')),
                 'rating': str(res.get('averageScore', '')),
+                'rating_mal': rating_mal,
+                'rating_imdb': rating_imdb,
                 'rec_count': str(res.get('_rec_count', '')),
                 'for_you_score': str(res.get('_for_you_score', '')),
             }

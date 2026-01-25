@@ -2235,7 +2235,7 @@ def FANART(payload: str, params: dict):
 def get_menu_items(menu_type):
     items = {
         'main': [
-            (control.lang(30457), "for_you", 'favourites.png', {}),
+            ('[COLOR deepskyblue]' + control.lang(30457) + '[/COLOR]', "for_you", 'favourites.png', {}),
             (control.lang(30001), "airing_calendar", 'airing_anime_calendar.png', {}),
             (control.lang(30002), "airing_last_season", 'airing_anime.png', {}),
             (control.lang(30003), "airing_this_season", 'airing_anime.png', {}),
