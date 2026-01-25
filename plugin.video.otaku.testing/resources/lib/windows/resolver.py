@@ -91,7 +91,13 @@ class Resolver(BaseWindow):
                 if lp[i:i + L].isdigit()
             ]
 
+            top_quality = sources[0].get('quality', 0)
+
             for idx, source in enumerate(sources):
+                # Only reorder if matched source has same or better quality
+                if source.get('quality', 0) < top_quality:
+                    continue
+
                 # embed/direct-style
                 if source['type'] in ['embed', 'direct']:
                     key = source['provider'] + " " + " ".join(map(str, source['info']))
