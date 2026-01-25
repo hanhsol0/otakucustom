@@ -167,7 +167,7 @@
         <control type="image">
             <left>245</left>
             <top>210</top>
-            <width>60</width>
+            <width>70</width>
             <height>38</height>
             <texture>white.png</texture>
             <colordiffuse>FF4da6ff</colordiffuse>
@@ -175,7 +175,7 @@
         <control type="label">
             <left>245</left>
             <top>210</top>
-            <width>60</width>
+            <width>70</width>
             <height>38</height>
             <font>font14</font>
             <textcolor>FFFFFFFF</textcolor>
@@ -186,7 +186,7 @@
         <control type="label">
             <left>245</left>
             <top>250</top>
-            <width>60</width>
+            <width>70</width>
             <height>16</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
@@ -197,18 +197,18 @@
         <!-- MAL Score -->
         <control type="image">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
-            <left>315</left>
+            <left>325</left>
             <top>210</top>
-            <width>60</width>
+            <width>70</width>
             <height>38</height>
             <texture>white.png</texture>
             <colordiffuse>FF2E51A2</colordiffuse>
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
-            <left>315</left>
+            <left>325</left>
             <top>210</top>
-            <width>60</width>
+            <width>70</width>
             <height>38</height>
             <font>font14</font>
             <textcolor>FFFFFFFF</textcolor>
@@ -218,9 +218,9 @@
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
-            <left>315</left>
+            <left>325</left>
             <top>250</top>
-            <width>60</width>
+            <width>70</width>
             <height>16</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
@@ -231,18 +231,18 @@
         <!-- IMDB Score -->
         <control type="image">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
-            <left>385</left>
+            <left>405</left>
             <top>210</top>
-            <width>60</width>
+            <width>70</width>
             <height>38</height>
             <texture>white.png</texture>
             <colordiffuse>FFF5C518</colordiffuse>
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
-            <left>385</left>
+            <left>405</left>
             <top>210</top>
-            <width>60</width>
+            <width>70</width>
             <height>38</height>
             <font>font14</font>
             <textcolor>FF000000</textcolor>
@@ -252,9 +252,9 @@
         </control>
         <control type="label">
             <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
-            <left>385</left>
+            <left>405</left>
             <top>250</top>
-            <width>60</width>
+            <width>70</width>
             <height>16</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
