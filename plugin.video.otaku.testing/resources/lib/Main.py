@@ -218,6 +218,19 @@ def FIND_RECOMMENDATIONS(payload, params):
     control.draw_items(BROWSER.get_recommendations(mal_id, page), 'tvshows')
 
 
+@Route('for_you')
+def FOR_YOU(payload, params):
+    page = int(params.get('page', 1))
+    control.draw_items(BROWSER.get_for_you(page), 'tvshows')
+
+
+@Route('dismiss_recommendation/*')
+def DISMISS_RECOMMENDATION(payload, params):
+    mal_id = int(payload)
+    database.dismiss_recommendation(mal_id)
+    control.refresh()
+
+
 @Route('find_relations/*')
 def FIND_RELATIONS(payload, params):
     path, mal_id, eps_watched = payload.rsplit("/")
@@ -2220,6 +2233,7 @@ def get_menu_items(menu_type):
             (control.lang(30002), "airing_last_season", 'airing_anime.png', {}),
             (control.lang(30003), "airing_this_season", 'airing_anime.png', {}),
             (control.lang(30004), "airing_next_season", 'airing_anime.png', {}),
+            (control.lang(30457), "for_you", 'favourites.png', {}),
             (control.lang(30005), "movies", 'movies.png', {}),
             (control.lang(30006), "tv_shows", 'tv_shows.png', {}),
             (control.lang(30007), "tv_shorts", 'tv_shorts.png', {}),

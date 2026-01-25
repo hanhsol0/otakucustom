@@ -1860,3 +1860,15 @@ msgstr ""
 msgctxt "#30456"
 msgid "Skip embed sources when debrid is enabled for faster autoplay. Falls back to embeds if no cached sources."
 msgstr ""
+
+msgctxt "#30457"
+msgid "For You"
+msgstr ""
+
+msgctxt "#30458"
+msgid "Prompt to Rate After Finishing Anime"
+msgstr ""
+
+msgctxt "#30459"
+msgid "Show a rating dialog when you finish the last episode of an anime"
+msgstr ""

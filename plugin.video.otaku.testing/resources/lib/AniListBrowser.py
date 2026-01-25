@@ -1356,6 +1356,229 @@ class AniListBrowser(BrowserBase):
         recommendations = database.get(self.get_recommendations_res, 24, variables)
         return self.process_recommendations_view(recommendations, f'find_recommendations/{mal_id}?page=%d', page)
 
+    def get_for_you(self, page):
+        """
+        Smart 'For You' recommendations:
+        - Uses cached aggregated results if fresh (< 24 hours)
+        - Otherwise: pulls from watchlist + mixes in trending/seasonal
+        - Falls back to top 100 if no watchlist
+        """
+        import time
+        from resources.lib.WatchlistFlavor import WatchlistFlavor
+
+        # Check cache first (instant if valid)
+        cached_recs, cache_time = database.get_for_you_cache()
+        cache_valid = cache_time and (time.time() - cache_time) < 86400  # 24 hours
+
+        if cached_recs and cache_valid:
+            return self._process_for_you_results(cached_recs, page)
+
+        # Try to build from watchlist
+        flavor = WatchlistFlavor.get_update_flavor()
+        if flavor:
+            recs = self._build_for_you_from_watchlist(flavor.flavor_name)
+            if recs:
+                # Mix in some trending/seasonal for freshness
+                recs = self._mix_in_trending(recs, flavor.flavor_name)
+                database.save_for_you_cache(recs)
+                return self._process_for_you_results(recs, page)
+
+        # Fallback: top 100
+        return self.get_top_100(page, None)
+
+    def _build_for_you_from_watchlist(self, flavor_name):
+        """
+        Aggregate recommendations from watchlist (runs once, then cached).
+        - Weights recommendations from highly-rated anime (8+) more heavily
+        - Tracks community recommendation score for display
+        """
+        # Get user's watched anime with their scores
+        completed = database.get_watchlist_cache(flavor_name, 'COMPLETED', limit=20)
+        current = database.get_watchlist_cache(flavor_name, 'CURRENT', limit=5)
+
+        source_anime = []  # [(mal_id, user_score)]
+        watched_ids = set()
+        rated_ids = set()  # Track rated anime for filtering
+
+        for item in list(completed) + list(current):
+            mal_id = item.get('mal_id')
+            if not mal_id:
+                continue
+            watched_ids.add(mal_id)
+
+            # Extract user's score (structure varies by service)
+            user_score = 0
+            if item.get('data'):
+                data = pickle.loads(item['data'])
+                if isinstance(data, dict):
+                    # AniList: data['score'] or data.get('scoreRaw')
+                    user_score = data.get('score', 0) or data.get('scoreRaw', 0)
+                    # MAL: data['list_status']['score']
+                    if 'list_status' in data:
+                        user_score = data['list_status'].get('score', 0)
+                    # Simkl: data.get('user_rating')
+                    if 'user_rating' in data:
+                        user_score = data.get('user_rating', 0) or 0
+
+            if user_score > 0:
+                rated_ids.add(mal_id)
+
+            source_anime.append((mal_id, user_score))
+
+        if not source_anime:
+            return None
+
+        # Sort by user score (prioritize highly-rated anime as sources)
+        source_anime.sort(key=lambda x: x[1], reverse=True)
+
+        # Aggregate recommendations with weighting
+        recommendations = {}
+        for mal_id, user_score in source_anime[:15]:
+            # Weight: 2x for anime rated 8+, 1x otherwise
+            weight = 2 if user_score >= 8 else 1
+
+            recs = database.get(self.get_recommendations_res, 24, {
+                'page': 1, 'perPage': 10, 'idMal': int(mal_id)
+            })
+            if not recs or 'edges' not in recs:
+                continue
+
+            for edge in recs['edges']:
+                rec = edge['node'].get('mediaRecommendation')
+                if not rec or not rec.get('idMal'):
+                    continue
+                rec_mal_id = rec['idMal']
+
+                # Skip if already watched or rated
+                if rec_mal_id in watched_ids or rec_mal_id in rated_ids:
+                    continue
+
+                community_rating = edge['node'].get('rating', 0)
+
+                if rec_mal_id not in recommendations:
+                    recommendations[rec_mal_id] = {
+                        'count': 0,
+                        'weighted_count': 0,
+                        'community_rating': 0,
+                        'data': rec
+                    }
+                recommendations[rec_mal_id]['count'] += 1
+                recommendations[rec_mal_id]['weighted_count'] += weight
+                recommendations[rec_mal_id]['community_rating'] += community_rating
+
+        # Sort by weighted count (prefers recs from highly-rated anime), then community rating
+        sorted_recs = sorted(
+            recommendations.values(),
+            key=lambda x: (x['weighted_count'], x['community_rating']),
+            reverse=True
+        )
+
+        # Store community rating in data for UI display
+        result = []
+        for r in sorted_recs[:100]:
+            anime_data = r['data'].copy()
+            anime_data['_for_you_score'] = r['community_rating']  # For UI display
+            anime_data['_rec_count'] = r['count']  # How many of your anime recommended this
+            result.append(anime_data)
+
+        return result
+
+    def _mix_in_trending(self, main_recs, flavor_name):
+        """
+        Mix in trending/seasonal anime for variety.
+        Adds ~10 anime from current season that match user's top genres.
+        """
+        # Get user's genre preferences from their watchlist
+        completed = database.get_watchlist_cache(flavor_name, 'COMPLETED', limit=30)
+        genre_counts = {}
+        for item in completed:
+            if item.get('data'):
+                data = pickle.loads(item['data'])
+                if isinstance(data, dict):
+                    genres = data.get('media', {}).get('genres', []) or data.get('genres', [])
+                    for genre in genres:
+                        genre_counts[genre] = genre_counts.get(genre, 0) + 1
+
+        # Get top 3 genres
+        top_genres = sorted(genre_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+        top_genre_names = [g[0] for g in top_genres]
+
+        if not top_genre_names:
+            return main_recs
+
+        # Get current season and year
+        season, year = self.get_season_year('this')
+        if not season or not year:
+            return main_recs
+
+        # Get currently airing anime
+        variables = {
+            'page': 1,
+            'perpage': 30,
+            'type': "ANIME",
+            'season': season,
+            'year': f'{year}%',
+            'sort': "TRENDING_DESC"
+        }
+        trending = database.get(self.get_base_res, 24, variables)
+
+        if not trending or 'ANIME' not in trending:
+            return main_recs
+
+        # Filter trending by user's genres, exclude already recommended
+        existing_ids = {r.get('idMal') for r in main_recs}
+        genre_matched = []
+
+        for anime in trending['ANIME']:
+            mal_id = anime.get('idMal')
+            if not mal_id or mal_id in existing_ids:
+                continue
+            anime_genres = anime.get('genres', [])
+            if any(g in top_genre_names for g in anime_genres):
+                anime['_for_you_score'] = 0  # Mark as trending addition
+                anime['_rec_count'] = 0
+                anime['_is_trending'] = True
+                genre_matched.append(anime)
+
+        # Add up to 10 trending anime, distributed throughout the list
+        random.shuffle(genre_matched)
+        trending_to_add = genre_matched[:10]
+
+        # Interleave: insert trending items at intervals
+        result = main_recs.copy()
+        for i, anime in enumerate(trending_to_add):
+            insert_pos = min((i + 1) * 8, len(result))  # Every ~8 positions
+            result.insert(insert_pos, anime)
+
+        return result[:100]  # Keep top 100
+
+    def _process_for_you_results(self, all_recs, page):
+        """Process cached recommendations for display"""
+        dismissed = database.get_dismissed_recommendations()
+        completed = self.open_completed()
+
+        # Filter out dismissed/watched
+        filtered = [r for r in all_recs
+                    if r.get('idMal') not in dismissed
+                    and str(r.get('idMal')) not in completed]
+
+        # Paginate
+        start = (page - 1) * self.perpage
+        end = start + self.perpage
+        page_recs = filtered[start:end]
+
+        if not page_recs:
+            return []
+
+        get_meta.collect_meta(page_recs)
+        mapfunc = partial(self.base_anilist_view, completed=completed)
+        results = list(filter(lambda x: x, map(mapfunc, page_recs)))
+
+        if len(filtered) > end:
+            results += self.handle_paging(True, 'for_you?page=%d', page)
+
+        return results
+
     def get_relations(self, mal_id):
         variables = {
             'idMal': mal_id

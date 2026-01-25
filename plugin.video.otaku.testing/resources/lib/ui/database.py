@@ -399,6 +399,52 @@ def remove_search(table, value):
             control.notify(control.ADDON_NAME, f"Search item not found: '{norm_value}'", time=3000)
 
 
+# ==================== For You Cache Functions ====================
+
+def get_for_you_cache():
+    """Get cached 'For You' recommendations (list of anime dicts)"""
+    with SQL(control.malSyncDB) as cursor:
+        cursor.execute('CREATE TABLE IF NOT EXISTS for_you_cache (id INTEGER PRIMARY KEY, data BLOB, last_updated INTEGER)')
+        cursor.execute('SELECT data, last_updated FROM for_you_cache WHERE id=1')
+        row = cursor.fetchone()
+        if row and row.get('data'):
+            return pickle.loads(row['data']), row['last_updated']
+        return None, None
+
+
+def save_for_you_cache(recommendations):
+    """Cache aggregated recommendations (list of anime dicts)"""
+    data = pickle.dumps(recommendations)
+    now = int(time.time())
+    with SQL(control.malSyncDB) as cursor:
+        cursor.execute('CREATE TABLE IF NOT EXISTS for_you_cache (id INTEGER PRIMARY KEY, data BLOB, last_updated INTEGER)')
+        cursor.execute('REPLACE INTO for_you_cache (id, data, last_updated) VALUES (1, ?, ?)', (data, now))
+        cursor.connection.commit()
+
+
+def clear_for_you_cache():
+    """Clear the For You cache to force rebuild"""
+    with SQL(control.malSyncDB) as cursor:
+        cursor.execute('DELETE FROM for_you_cache WHERE id=1')
+        cursor.connection.commit()
+
+
+def get_dismissed_recommendations():
+    """Get set of dismissed MAL IDs"""
+    with SQL(control.malSyncDB) as cursor:
+        cursor.execute('CREATE TABLE IF NOT EXISTS dismissed_recommendations (mal_id INTEGER PRIMARY KEY)')
+        cursor.execute('SELECT mal_id FROM dismissed_recommendations')
+        return {row['mal_id'] for row in cursor.fetchall()}
+
+
+def dismiss_recommendation(mal_id):
+    """Dismiss an anime from For You"""
+    with SQL(control.malSyncDB) as cursor:
+        cursor.execute('CREATE TABLE IF NOT EXISTS dismissed_recommendations (mal_id INTEGER PRIMARY KEY)')
+        cursor.execute('INSERT OR IGNORE INTO dismissed_recommendations (mal_id) VALUES (?)', (int(mal_id),))
+        cursor.connection.commit()
+
+
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):

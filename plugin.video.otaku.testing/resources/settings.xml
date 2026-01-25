@@ -2205,6 +2205,14 @@
 						<dependency type="visible" setting="watchlist.update.enabled">true</dependency>
 					</dependencies>
 				</setting>
+				<setting id="watchlist.rating.prompt" type="boolean" label="30458" help="30459">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+					<dependencies>
+						<dependency type="visible" setting="watchlist.update.enabled">true</dependency>
+					</dependencies>
+				</setting>
 			</group>
 
 			<!-- Anilist -->
