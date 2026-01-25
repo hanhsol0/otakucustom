@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
-<addon id="plugin.video.otaku.testing" name="Otaku Testing" provider-name="TeamOtaku" version="5.2.159">
+<addon id="plugin.video.otaku.testing" name="Otaku Testing" provider-name="TeamOtaku" version="5.2.160">
   <requires>
     <import addon="xbmc.python" version="3.0.1"/>
     <import addon="script.module.requests"/>
@@ -34,7 +34,7 @@
     </assets>
   </extension>
 </addon>
-<addon id="context.otaku.testing" version="1.0.32" name="Otaku - Global Context Menu Items" provider-name="TeamOtaku">
+<addon id="context.otaku.testing" version="1.0.33" name="Otaku - Global Context Menu Items" provider-name="TeamOtaku">
   <requires>
      <import addon="xbmc.python" version="3.0.1"/>
   </requires>
@@ -51,6 +51,14 @@
       <item library="default.py" args="getwatchorder">
         <label>Get Watch Order</label>
         <visible>String.IsEqual(Window(home).Property(context.otaku.testing.getwatchorder),true) + String.StartsWith(ListItem.Path,plugin://plugin.video.otaku.testing/) + [String.IsEqual(ListItem.DBTYPE,tvshow)|String.IsEqual(ListItem.DBTYPE,movie)]</visible>
+      </item>
+      <item library="default.py" args="ratethis">
+        <label>Rate This</label>
+        <visible>String.IsEqual(Window(home).Property(context.otaku.testing.ratethis),true) + String.StartsWith(ListItem.Path,plugin://plugin.video.otaku.testing/) + [String.IsEqual(ListItem.DBTYPE,tvshow)|String.IsEqual(ListItem.DBTYPE,movie)]</visible>
+      </item>
+      <item library="default.py" args="watchlist">
+        <label>WatchList Manager</label>
+        <visible>String.IsEqual(Window(home).Property(context.otaku.testing.watchlist),true) + String.StartsWith(ListItem.Path,plugin://plugin.video.otaku.testing/) + [String.IsEqual(ListItem.DBTYPE,tvshow)|String.IsEqual(ListItem.DBTYPE,movie)]</visible>
       </item>
       <item library="default.py" args="markedaswatched">
         <label>Marked as Watched [COLOR blue]WatchList[/COLOR]</label>
@@ -71,14 +79,6 @@
       <item library="default.py" args="deletefromdatabase">
         <label>Delete From Database</label>
         <visible>String.IsEqual(Window(home).Property(context.otaku.testing.deletefromdatabase),true) + String.StartsWith(ListItem.Path,plugin://plugin.video.otaku.testing/) + [String.IsEqual(ListItem.DBTYPE,tvshow)|String.IsEqual(ListItem.DBTYPE,movie)]</visible>
-      </item>
-      <item library="default.py" args="ratethis">
-        <label>Rate This</label>
-        <visible>String.IsEqual(Window(home).Property(context.otaku.testing.ratethis),true) + String.StartsWith(ListItem.Path,plugin://plugin.video.otaku.testing/) + [String.IsEqual(ListItem.DBTYPE,tvshow)|String.IsEqual(ListItem.DBTYPE,movie)]</visible>
-      </item>
-      <item library="default.py" args="watchlist">
-        <label>WatchList Manager</label>
-        <visible>String.IsEqual(Window(home).Property(context.otaku.testing.watchlist),true) + String.StartsWith(ListItem.Path,plugin://plugin.video.otaku.testing/) + [String.IsEqual(ListItem.DBTYPE,tvshow)|String.IsEqual(ListItem.DBTYPE,movie)]</visible>
       </item>
       <item library="default.py" args="fanartselect">
         <label>Select Fanart</label>
