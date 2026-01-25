@@ -199,16 +199,16 @@ class Sources(GetSources):
                 or not self.remainingProviders
                 or (control.getBool('general.terminate.oncloud') and len(self.cloud_files) > 0)
                 or (control.getBool('general.terminate.onlocal') and len(self.local_files) > 0)
-                or (debrid_priority and (len(self.torrentCacheSources) > 0 or len(self.cloud_files) > 0))
+                or (debrid_priority and (len(self.torrentSources) > 0 or len(self.cloud_files) > 0))
             ):
                 break
 
             runtime = time.perf_counter() - start_time
             self.progress = runtime / timeout * 100
 
-        # Debrid Priority Mode: Fall back to embeds if no cached sources found
-        if debrid_priority and len(self.torrentCacheSources) == 0 and len(self.cloud_files) == 0:
-            control.log('Debrid Priority: No cached sources, falling back to embeds', 'info')
+        # Debrid Priority Mode: Fall back to embeds if no debrid sources found
+        if debrid_priority and len(self.torrentSources) == 0 and len(self.cloud_files) == 0:
+            control.log('Debrid Priority: No debrid sources, falling back to embeds', 'info')
             self._scrape_embeds_fallback(mal_id, episode, media_type, rescrape)
 
         if len(self.torrentSources) + len(self.embedSources) + len(self.cloud_files) + len(self.local_files) == 0:
