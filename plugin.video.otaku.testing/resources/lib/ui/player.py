@@ -170,8 +170,8 @@ class WatchlistPlayer(player):
                 if self.episode == episodes and status in ['Finished Airing', 'FINISHED']:
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'completed')
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'COMPLETED')
-                    xbmc.sleep(3000)
-                    service.sync_watchlist(True)
+                    # Run sync in background to avoid blocking playback
+                    threading.Thread(target=lambda: (xbmc.sleep(3000), service.sync_watchlist(True)), daemon=True).start()
                 else:
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'watching')
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'current')
@@ -233,7 +233,7 @@ class WatchlistPlayer(player):
         # For debrid sources, wait a moment for Kodi to parse embedded streams
         if self.type not in ['embed', 'direct']:
             # Wait for streams to be fully loaded for debrid/torrent sources
-            xbmc.sleep(500)  # 0.5 second delay for stream parsing
+            xbmc.sleep(300)  # Reduced from 500ms for faster playback start
             self.setup_audio_and_subtitles()
         elif self.provider in ['aniwave', 'h!anime']:
             self.setup_audio_and_subtitles()

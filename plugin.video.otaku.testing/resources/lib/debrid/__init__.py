@@ -11,6 +11,8 @@ class Debrid:
         self.torboxCached = []
         self.easydebridCached = []
         self.realdebridCached = []
+        self.alldebridCached = []
+        self.debridlinkCached = []
 
         self.premiumizeUnCached = []
         self.realdebridUnCached = []
@@ -52,24 +54,56 @@ class Debrid:
             self.threads.append(t)
 
         for i in self.threads:
-            i.join()
+            i.join(timeout=10)  # 10 second max per provider
 
-        cached_list = self.premiumizeCached + self.torboxCached + self.easydebridCached + self.realdebridCached
+        # Log if any threads are still running
+        still_running = [t for t in self.threads if t.is_alive()]
+        if still_running:
+            control.log(f'Debrid cache check: {len(still_running)} providers timed out', 'warning')
+
+        cached_list = self.premiumizeCached + self.torboxCached + self.easydebridCached + self.realdebridCached + self.alldebridCached + self.debridlinkCached
         uncached_list = self.realdebridUnCached + self.premiumizeUnCached + self.alldebridUnCached + self.debridlinkUnCached + self.torboxUnCached
         return cached_list, uncached_list
 
     def all_debrid_worker(self, torrent_list):
         if len(torrent_list) > 0:
-            for i in torrent_list:
-                i['debrid_provider'] = 'Alldebrid'
-                self.alldebridUnCached.append(i)
+            from resources.lib.debrid import all_debrid
+            api = all_debrid.AllDebrid()
+            magnets = [f"magnet:?xt=urn:btih:{t['hash']}" for t in torrent_list]
+
+            try:
+                cache_status = api.check_instant_availability(magnets)
+                for torrent in torrent_list:
+                    torrent['debrid_provider'] = 'Alldebrid'
+                    if cache_status.get(torrent['hash'].lower()):
+                        self.alldebridCached.append(torrent)
+                    else:
+                        self.alldebridUnCached.append(torrent)
+            except Exception as e:
+                control.log(f'AllDebrid cache check failed: {e}', 'warning')
+                for torrent in torrent_list:
+                    torrent['debrid_provider'] = 'Alldebrid'
+                    self.alldebridUnCached.append(torrent)
 
     def debrid_link_worker(self, torrent_list):
         hash_list = [i['hash'] for i in torrent_list]
         if len(hash_list) > 0:
-            for torrent in torrent_list:
-                torrent['debrid_provider'] = 'Debrid-Link'
-                self.debridlinkUnCached.append(torrent)
+            from resources.lib.debrid import debrid_link
+            api = debrid_link.DebridLink()
+
+            try:
+                cache_status = api.check_instant_availability(hash_list)
+                for torrent in torrent_list:
+                    torrent['debrid_provider'] = 'Debrid-Link'
+                    if cache_status.get(torrent['hash'].lower()):
+                        self.debridlinkCached.append(torrent)
+                    else:
+                        self.debridlinkUnCached.append(torrent)
+            except Exception as e:
+                control.log(f'Debrid-Link cache check failed: {e}', 'warning')
+                for torrent in torrent_list:
+                    torrent['debrid_provider'] = 'Debrid-Link'
+                    self.debridlinkUnCached.append(torrent)
 
     def real_debrid_worker(self, torrent_list):
         hash_list = [i['hash'] for i in torrent_list]

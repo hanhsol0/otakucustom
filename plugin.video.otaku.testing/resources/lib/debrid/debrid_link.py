@@ -102,6 +102,17 @@ class DebridLink:
             control.setSetting('debridlink.token', self.token)
             control.setInt('debridlink.expiry', int(time.time()) + response['expires_in'])
 
+    def check_instant_availability(self, hashes):
+        """Check if hashes are cached on Debrid-Link"""
+        url = f"{self.api_url}/seedbox/cached"
+        params = {'url': ','.join(hashes)}
+        r = client.get(url, headers=self.headers(), params=params)
+        if r and r.ok:
+            data = r.json().get('value', {})
+            # data is a dict mapping hash -> bool
+            return {h.lower(): data.get(h, False) for h in hashes}
+        return {}
+
     def addMagnet(self, magnet):
         postData = {
             'url': magnet,

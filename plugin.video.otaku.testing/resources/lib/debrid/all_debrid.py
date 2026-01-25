@@ -75,6 +75,34 @@ class AllDebrid:
             return True
         return False
 
+    def check_instant_availability(self, magnets):
+        """Check if magnets are instantly available (cached)"""
+        import urllib.parse
+        params = {
+            'agent': self.agent_identifier,
+            'apikey': self.token,
+            'magnets[]': magnets  # AllDebrid accepts array
+        }
+        encoded_params = urllib.parse.urlencode(params, doseq=True)
+        url = f'{self.base_url}/magnet/instant?{encoded_params}'
+        r = client.get(url)
+        if r and r.ok:
+            data = r.json().get('data', {})
+            # Returns dict with hash -> availability info
+            result = {}
+            for m in data.get('magnets', []):
+                # Extract hash from magnet link
+                magnet_hash = m.get('hash', '').lower()
+                if not magnet_hash and m.get('magnet'):
+                    # Parse hash from magnet link if not directly provided
+                    import re
+                    match = re.search(r'btih:([a-fA-F0-9]+)', m.get('magnet', ''))
+                    if match:
+                        magnet_hash = match.group(1).lower()
+                result[magnet_hash] = m.get('instant', False)
+            return result
+        return {}
+
     def addMagnet(self, magnet_hash):
         params = {
             'agent': self.agent_identifier,

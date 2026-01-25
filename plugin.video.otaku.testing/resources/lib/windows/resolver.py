@@ -176,6 +176,13 @@ class Resolver(BaseWindow):
 
         if self.return_data.get('local'):
             self.return_data['linkinfo'] = self.return_data
+        elif self.return_data['source'] and self.return_data['source'].get('type') in ['torrent', 'cloud', 'hoster']:
+            # Skip prefetch for debrid sources - already validated by debrid API
+            # This avoids 200-500ms latency and potential token/rate limit issues
+            self.return_data['linkinfo'] = {
+                'url': self.return_data['link'],
+                'headers': {}  # Let Kodi determine content-type
+            }
         else:
             self.return_data['linkinfo'] = self.prefetch_play_link(self.return_data['link'])
 
