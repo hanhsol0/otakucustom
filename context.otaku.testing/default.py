@@ -87,6 +87,9 @@ def main():
     elif arg == 'watchlist':
         path = path.split(plugin, 1)[1]
         xbmc.executebuiltin(f"RunPlugin({plugin}/watchlist_manager{path})")
+    elif arg == 'ratethis':
+        path = path.split(plugin, 1)[1]
+        xbmc.executebuiltin(f"RunPlugin({plugin}/rate_anime{path})")
     elif arg == 'markedaswatched':
         path = path.split(f'{plugin}/play', 1)[1]
         xbmc.executebuiltin(f"RunPlugin({plugin}/marked_as_watched{path})")

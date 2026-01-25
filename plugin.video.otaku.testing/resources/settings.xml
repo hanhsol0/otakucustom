@@ -3386,6 +3386,11 @@
 					<default>true</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="context.otaku.testing.ratethis" type="boolean" label="30460" help="">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
 				<setting id="context.otaku.testing.markedaswatched" type="boolean" label="30253" help="">
 					<level>0</level>
 					<default>true</default>

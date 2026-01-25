@@ -11,7 +11,8 @@ properties = [
     'context.otaku.testing.deletefromdatabase',
     'context.otaku.testing.watchlist',
     'context.otaku.testing.markedaswatched',
-    'context.otaku.testing.fanartselect'
+    'context.otaku.testing.fanartselect',
+    'context.otaku.testing.ratethis'
 ]
 
 if xbmc.getCondVisibility('System.AddonIsEnabled(%s)' % 'plugin.video.otaku.testing'):

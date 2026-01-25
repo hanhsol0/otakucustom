@@ -74,6 +74,49 @@ def WATCHLIST_TO_EP(payload, params):
     control.draw_items(anime_general, content_type)
 
 
+@Route('rate_anime/*')
+def RATE_ANIME(payload, params):
+    if not control.getBool('watchlist.update.enabled'):
+        control.ok_dialog(control.ADDON_NAME, 'No Watchlist Enabled: \n\nPlease enable [B]Update Watchlist[/B] before using Rate This')
+        return control.exit_code()
+    payload_list = payload.rsplit('/')
+    path, mal_id, eps_watched = payload_list
+
+    if not (show := database.get_show(mal_id)):
+        show = BROWSER.get_anime(mal_id)
+
+    if not (flavor := WatchlistFlavor.get_update_flavor()):
+        control.ok_dialog(control.ADDON_NAME, 'No Watchlist Enabled: \n\nPlease Enable a Watchlist before rating')
+        return control.exit_code()
+
+    kodi_meta = pickle.loads(show['kodi_meta'])
+    title = kodi_meta['title_userPreferred']
+    heading = f'{control.ADDON_NAME} - ({str(flavor.flavor_name).capitalize()})'
+
+    score_list = [
+        "(10) Masterpiece",
+        "(9) Great",
+        "(8) Very Good",
+        "(7) Good",
+        "(6) Fine",
+        "(5) Average",
+        "(4) Bad",
+        "(3) Very Bad",
+        "(2) Horrible",
+        "(1) Appalling",
+        "(0) No Score"
+    ]
+    score = control.select_dialog(f'Rate: {title}', score_list)
+    if score != -1:
+        score = 10 - score
+        set_score = set_watchlist_score(mal_id, score)
+        if set_score:
+            control.ok_dialog(heading, f'[I]{title}[/I] was rated [B]{score}[/B]')
+        else:
+            control.ok_dialog(heading, 'Unable to Set Score')
+    return control.exit_code()
+
+
 @Route('watchlist_manager/*')
 def CONTEXT_MENU(payload, params):
     if not control.getBool('watchlist.update.enabled'):

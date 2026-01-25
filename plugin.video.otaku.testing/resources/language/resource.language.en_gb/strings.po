@@ -1872,3 +1872,7 @@ msgstr ""
 msgctxt "#30459"
 msgid "Show a rating dialog when you finish the last episode of an anime"
 msgstr ""
+
+msgctxt "#30460"
+msgid "Rate This"
+msgstr ""
