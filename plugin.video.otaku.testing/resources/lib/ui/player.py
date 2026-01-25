@@ -419,12 +419,15 @@ class WatchlistPlayer(player):
                 else:
                     target_audio_index = audio_streams[0]['index'] if audio_streams else None
 
-            # Only switch if we found a preferred language stream (not just falling back to default/first)
+            # Only switch if we found a preferred language stream AND it's different from current
             # This avoids restarting audio when there's no benefit
             preferred_found = any(s['language'] == preferred_audio_streams for s in audio_streams)
-            if preferred_found and target_audio_index is not None:
+            current_audio = self.getAudioStream()
+            if preferred_found and target_audio_index is not None and target_audio_index != current_audio:
                 self.setAudioStream(target_audio_index)
-                control.log(f'Audio stream set to {target_audio_index} ({preferred_audio_streams})', 'info')
+                control.log(f'Audio stream set to {target_audio_index} ({preferred_audio_streams}), was {current_audio}', 'info')
+            elif preferred_found:
+                control.log(f'Audio stream already at {current_audio} ({preferred_audio_streams}), skipping', 'info')
             else:
                 control.log(f'No preferred audio ({preferred_audio_streams}) found, keeping default', 'info')
 
