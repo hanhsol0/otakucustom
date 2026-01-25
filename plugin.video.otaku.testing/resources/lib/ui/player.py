@@ -5,7 +5,7 @@ import service
 import json
 
 from resources.lib.ui import control, database
-from resources.lib.endpoints import aniskip, anime_skip, opensubtitles
+from resources.lib.endpoints import aniskip, anime_skip
 from resources.lib import WatchlistIntegration, indexers
 
 
@@ -344,81 +344,6 @@ class WatchlistPlayer(player):
             return time_remaining <= playnext_time
         return False
 
-    def _fetch_external_subtitles(self):
-        """Fetch subtitles from OpenSubtitles when no embedded subs available"""
-        try:
-            # Get preferred subtitle language from settings
-            subtitle_langs = [
-                "none", "eng", "jpn", "spa", "fre", "ger",
-                "ita", "dut", "rus", "por", "kor", "chi",
-                "ara", "hin", "tur", "pol", "swe", "nor",
-                "dan", "fin"
-            ]
-            # Map 3-letter codes to 2-letter codes for OpenSubtitles
-            lang_map = {
-                'eng': 'en', 'jpn': 'ja', 'spa': 'es', 'fre': 'fr', 'ger': 'de',
-                'ita': 'it', 'dut': 'nl', 'rus': 'ru', 'por': 'pt', 'kor': 'ko',
-                'chi': 'zh', 'ara': 'ar', 'hin': 'hi', 'tur': 'tr', 'pol': 'pl',
-                'swe': 'sv', 'nor': 'no', 'dan': 'da', 'fin': 'fi'
-            }
-
-            preferred_lang_code = subtitle_langs[control.getInt('general.subtitles')]
-            if preferred_lang_code == 'none':
-                control.log('Subtitle preference is "none" - skipping external fetch')
-                return
-
-            preferred_lang = lang_map.get(preferred_lang_code, 'en')
-            control.log(f'Looking for {preferred_lang_code} ({preferred_lang}) subtitles from OpenSubtitles...')
-
-            # Try to fetch using OpenSubtitles API (fully automatic)
-            if opensubtitles.is_enabled():
-                # Get actual anime title from database
-                import pickle
-                show = database.get_show(self.mal_id)
-                title = None
-                if show:
-                    try:
-                        kodi_meta = pickle.loads(show['kodi_meta'])
-                        title = kodi_meta.get('title_userPreferred') or kodi_meta.get('title') or kodi_meta.get('name')
-                    except Exception:
-                        pass
-
-                if not title:
-                    title = str(self.mal_id)
-                    control.log(f'OpenSubtitles: Could not get title, using mal_id: {title}', 'warning')
-                else:
-                    control.log(f'OpenSubtitles: Searching for "{title}"')
-
-                episode = getattr(self, 'episode', None)
-
-                # Get video URL for hash-based search
-                video_url = None
-                try:
-                    video_url = self.getPlayingFile()
-                except Exception:
-                    video_url = self.path
-
-                control.log(f'OpenSubtitles: Searching for title="{title}" episode={episode} lang={preferred_lang}', 'info')
-
-                success = opensubtitles.fetch_and_apply_subtitle(
-                    player=self,
-                    title=title,
-                    episode=episode,
-                    language=preferred_lang,
-                    video_url=video_url
-                )
-
-                if success:
-                    self.showSubtitles(True)
-                    control.log('OpenSubtitles: Subtitle applied automatically')
-                    return
-                else:
-                    control.log('OpenSubtitles: No subtitles found or download failed')
-            else:
-                control.log('OpenSubtitles not configured - continuing without external subs')
-        except Exception as e:
-            control.log(f'Error fetching external subtitles: {e}', 'error')
-
     def setup_audio_and_subtitles(self):
         """Handle audio and subtitle setup with retry logic for debrid sources"""
         control.log('setup_audio_and_subtitles called', 'info')
@@ -471,14 +396,7 @@ class WatchlistPlayer(player):
 
             if not audio_streams and not subtitle_streams:
                 control.log('No audio/subtitle streams found after retries', 'warning')
-                # No embedded subs - trigger OpenSubtitles search
-                self._fetch_external_subtitles()
                 return
-
-            # If no subtitle streams but we have audio, try external subs
-            if not subtitle_streams and audio_streams:
-                control.log('No embedded subtitles found - fetching from OpenSubtitles', 'info')
-                self._fetch_external_subtitles()
 
             preferred_audio_streams = audios[self.preferred_audio]
             preferred_subtitle_lang = subtitles[self.preferred_subtitle_setting]
