@@ -188,6 +188,12 @@ class OtakuBrowser(BrowserBase):
         mal_res = database.get(self.get_mal_base_res, 24, f"{self._BASE_URL}/anime/{mal_id}")
         return self.process_res(mal_res['data'])
 
+    def get_for_you(self, page):
+        """Delegate to AniListBrowser for For You recommendations"""
+        from resources.lib.AniListBrowser import AniListBrowser
+        anilist = AniListBrowser()
+        return anilist.get_for_you(page)
+
     def get_recommendations(self, mal_id, page, prefix=None):
         recommendations = database.get(self.get_mal_base_res, 24, f"{self._BASE_URL}/anime/{mal_id}/recommendations")
         base_plugin_url = f"{prefix}?page=%d" if prefix else "recommendations?page=%d"
