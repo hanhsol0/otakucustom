@@ -76,6 +76,9 @@ class ForYouWindow(BaseWindow):
             # Set all properties
             for key, value in item.items():
                 try:
+                    if isinstance(value, dict):
+                        # Skip dicts - they're not valid property values
+                        continue
                     if isinstance(value, list):
                         value = ', '.join(str(v) for v in value)
                     menu_item.setProperty(key, str(value) if value is not None else '')
