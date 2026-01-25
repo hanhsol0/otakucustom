@@ -370,7 +370,7 @@ class WatchlistPlayer(player):
                 "method": "Player.GetProperties",
                 "params": {
                     "playerid": 1,
-                    "properties": ["subtitles", "audiostreams"]
+                    "properties": ["subtitles", "audiostreams", "currentaudiostream", "currentsubtitle"]
                 },
                 "id": 1
             }
@@ -397,15 +397,20 @@ class WatchlistPlayer(player):
             # Retry logic for getting streams (debrid sources may need time to load)
             audio_streams = []
             subtitle_streams = []
+            current_audio_stream = {}
+            current_subtitle_stream = {}
             for attempt in range(3):
                 response = control.jsonrpc(query)
                 if 'result' in response:
                     player_properties = response['result']
                     audio_streams = player_properties.get('audiostreams', [])
                     subtitle_streams = player_properties.get('subtitles', [])
+                    current_audio_stream = player_properties.get('currentaudiostream', {})
+                    current_subtitle_stream = player_properties.get('currentsubtitle', {})
                     # If we have streams, we're good
                     if audio_streams or subtitle_streams:
                         control.log(f'Found {len(audio_streams)} audio and {len(subtitle_streams)} subtitle streams')
+                        control.log(f'Current audio: {current_audio_stream}, Current subtitle: {current_subtitle_stream}')
                         break
                 # Wait before retry (shorter delay)
                 if attempt < 2:
@@ -439,7 +444,9 @@ class WatchlistPlayer(player):
             # Only switch if we found a preferred language stream AND it's different from current
             # This avoids restarting audio when there's no benefit
             preferred_found = any(s['language'] == preferred_audio_streams for s in audio_streams)
-            current_audio = self.getAudioStream()
+            # Get current audio stream index from JSON-RPC response
+            current_audio = current_audio_stream.get('index')
+
             if preferred_found and target_audio_index is not None and target_audio_index != current_audio:
                 self.setAudioStream(target_audio_index)
                 control.log(f'Audio stream set to {target_audio_index} ({preferred_audio_streams}), was {current_audio}', 'info')
@@ -555,16 +562,12 @@ class WatchlistPlayer(player):
                     # If no default subtitle stream is found, set to the first available subtitle stream
                     subtitle_int = subtitle_streams[0]['index'] if subtitle_streams else None
 
-            # Get current subtitle stream to avoid unnecessary switching
-            current_subtitle_stream = None
-            try:
-                current_subtitle_stream = self.getSubtitleStream()
-            except:
-                pass
+            # Get current subtitle stream index from JSON-RPC response (already fetched above)
+            current_sub_index = current_subtitle_stream.get('index') if current_subtitle_stream else None
 
             if subtitle_int is not None:
-                if subtitle_int != current_subtitle_stream:
-                    control.log(f'Setting subtitle stream to index {subtitle_int} (was {current_subtitle_stream})', 'info')
+                if subtitle_int != current_sub_index:
+                    control.log(f'Setting subtitle stream to index {subtitle_int} (was {current_sub_index})', 'info')
                     self.setSubtitleStream(subtitle_int)
                 else:
                     control.log(f'Subtitle stream already set to {subtitle_int}, skipping', 'info')
