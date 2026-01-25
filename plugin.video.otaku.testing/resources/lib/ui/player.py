@@ -563,42 +563,24 @@ class WatchlistPlayer(player):
 
             # Get list of available audio languages
             audio_langs = [s.get('language', '') for s in audio_streams]
+            is_japanese_audio = "jpn" in audio_langs or preferred_audio_streams == "jpn"
+            is_dub_audio = "eng" in audio_langs and "jpn" not in audio_langs
 
-            # Enable and Disable Subtitles based on audio streams
-            if len(audio_streams) == 1:
-                if "jpn" not in audio_langs:
-                    # Single non-Japanese audio (likely dub)
-                    if control.getBool('general.dubsubtitles'):
-                        if preferred_subtitle_lang == "none":
-                            self.showSubtitles(False)
-                        else:
-                            self.showSubtitles(True)
-                    else:
-                        self.showSubtitles(False)
-                elif "jpn" in audio_langs:
-                    # Single Japanese audio - show subs unless preference is none
-                    if preferred_subtitle_lang == "none":
-                        self.showSubtitles(False)
-                    else:
-                        self.showSubtitles(True)
+            # Simple subtitle visibility logic:
+            # - If user wants no subs: hide them
+            # - If Japanese audio: show subs (unless pref is none)
+            # - If dub audio: respect dubsubtitles setting
+            if preferred_subtitle_lang == "none":
+                self.showSubtitles(False)
+                control.log('Subtitles hidden (preference is none)')
+            elif is_dub_audio and not control.getBool('general.dubsubtitles'):
+                self.showSubtitles(False)
+                control.log('Subtitles hidden (dub audio, dubsubtitles disabled)')
+            else:
+                self.showSubtitles(True)
+                control.log('Subtitles enabled')
 
-            if len(audio_streams) > 1:
-                if preferred_audio_streams == "eng":
-                    if control.getBool('general.dubsubtitles'):
-                        if preferred_subtitle_lang == "none":
-                            self.showSubtitles(False)
-                        else:
-                            self.showSubtitles(True)
-                    else:
-                        self.showSubtitles(False)
-
-                if preferred_audio_streams == "jpn":
-                    if preferred_subtitle_lang == "none":
-                        self.showSubtitles(False)
-                    else:
-                        self.showSubtitles(True)
-
-            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}')
+            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}, jpn_audio={is_japanese_audio}')
 
     def process_aniskip(self):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
