@@ -621,11 +621,13 @@ class WatchlistPlayer(player):
     def process_embed(self, embed):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
             embed_skipintro_start = control.getInt(f'{embed}.skipintro.start')
-            control.log(f'process_embed({embed}): skipintro_start={embed_skipintro_start}', 'info')
+            embed_skipintro_end = control.getInt(f'{embed}.skipintro.end')
+            control.log(f'process_embed({embed}): skipintro_start={embed_skipintro_start}, skipintro_end={embed_skipintro_end}', 'info')
             if embed_skipintro_start != -1:
                 self.skipintro_start = embed_skipintro_start + self.skipintro_offset
-                self.skipintro_end = control.getInt(f'{embed}.skipintro.end') + self.skipintro_offset
+                self.skipintro_end = embed_skipintro_end + self.skipintro_offset
                 self.skipintro_aniskip = True
+                control.log(f'Skip intro set: {self.skipintro_start}-{self.skipintro_end}', 'info')
         if self.skipoutro_aniskip_enable and not self.skipoutro_aniskip:
             embed_skipoutro_start = control.getInt(f'{embed}.skipoutro.start')
             if embed_skipoutro_start != -1:
