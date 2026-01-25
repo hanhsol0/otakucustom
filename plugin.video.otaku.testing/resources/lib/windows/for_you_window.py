@@ -169,16 +169,16 @@ class ForYouWindow(BaseWindow):
 
         context_menu_options = ["Remove from For You"]
 
+        if control.getBool('context.otaku.testing.ratethis'):
+            context_menu_options.append("Rate This")
+        if control.getBool('context.otaku.testing.watchlist'):
+            context_menu_options.append("WatchList Manager")
         if control.getBool('context.otaku.testing.findrecommendations'):
             context_menu_options.append("Find Recommendations")
         if control.getBool('context.otaku.testing.findrelations'):
             context_menu_options.append("Find Relations")
         if control.getBool('context.otaku.testing.getwatchorder'):
             context_menu_options.append("Get Watch Order")
-        if control.getBool('context.otaku.testing.watchlist'):
-            context_menu_options.append("WatchList Manager")
-        if control.getBool('context.otaku.testing.ratethis'):
-            context_menu_options.append("Rate This")
 
         context = control.context_menu(context_menu_options)
         if context < 0:
