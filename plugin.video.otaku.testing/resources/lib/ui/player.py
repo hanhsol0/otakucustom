@@ -239,16 +239,14 @@ class WatchlistPlayer(player):
             self.setup_audio_and_subtitles()
 
         # Handle different media types
-        control.log(f'Media type handling: episodes={self.episodes}, media_type={self.media_type}', 'info')
+        control.log(f'Media type handling: episodes={self.episodes}, media_type={self.media_type}', 'debug')
         if self.episodes:
             # Handle playlist building if needed
             if self.media_type == 'episode' and playList.size() == 1:
                 self.build_playlist()
 
             # Handle skip intro functionality
-            control.log('Calling _handle_skip_intro...', 'info')
             self._handle_skip_intro()
-            control.log('_handle_skip_intro completed', 'info')
 
             # Handle watchlist updates for episodes
             self.onWatchedPercent()
@@ -269,14 +267,12 @@ class WatchlistPlayer(player):
 
     def _handle_skip_intro(self):
         """Handle skip intro functionality with fallbacks - optimized"""
-        control.log(f'_handle_skip_intro called: skipintrodialog={control.getBool("smartplay.skipintrodialog")}, auto={self.skipintro_aniskip_auto}', 'info')
+        control.log(f'_handle_skip_intro: skipintrodialog={control.getBool("smartplay.skipintrodialog")}, auto={self.skipintro_aniskip_auto}', 'debug')
         # Only proceed if skip intro dialog is enabled OR auto-skip is enabled
         if not (control.getBool('smartplay.skipintrodialog') or self.skipintro_aniskip_auto):
-            control.log('Skip intro disabled, returning', 'info')
             return
 
         # Wait for skip times to be processed (with timeout)
-        # Increased timeout to 10 seconds to allow AniSkip API to respond
         timeout = 100  # 100 iterations = 10 seconds max
         while not self._skip_processed and timeout > 0:
             xbmc.sleep(100)
@@ -289,36 +285,23 @@ class WatchlistPlayer(player):
         intro_start = self.skipintro_start if self.skipintro_aniskip else control.getInt('skipintro.delay') or 1
         intro_end = self.skipintro_end if self.skipintro_aniskip else intro_start + (control.getInt('skipintro.duration') * 60)
 
-        control.log(f'Intro monitoring: aniskip={self.skipintro_aniskip}, start={intro_start}, end={intro_end}', 'info')
-
-        if not self.skipintro_aniskip:
-            control.log('Using default intro skip times - no aniskip data found')
+        control.log(f'Intro monitoring: aniskip={self.skipintro_aniskip}, start={intro_start}, end={intro_end}', 'debug')
 
         # Optimized monitoring - check less frequently
-        control.log('Starting intro monitoring loop...', 'info')
-        loop_count = 0
         while self.isPlaying():
             self.current_time = int(self.getTime())
-            loop_count += 1
-            if loop_count % 5 == 0:  # Log every 10 seconds
-                control.log(f'Intro monitor: current_time={self.current_time}, intro_start={intro_start}, intro_end={intro_end}', 'info')
             if self.current_time > intro_end:
-                control.log(f'Past intro end ({self.current_time} > {intro_end}), stopping intro monitor', 'info')
                 break
             elif self.current_time > intro_start:
-                control.log(f'In intro range ({intro_start} < {self.current_time} < {intro_end}), showing dialog', 'info')
                 # Auto skip ONLY if enabled AND we have aniskip data
                 if self.skipintro_aniskip_auto and self.skipintro_aniskip:
                     self.seekTime(intro_end)
-                    control.log(f'Auto-skipped intro: {intro_start}-{intro_end}')
+                    control.log(f'Auto-skipped intro: {intro_start}-{intro_end}', 'debug')
                 else:
                     # Show skip intro dialog (works for both aniskip data and default times)
-                    control.log('Calling PlayerDialogs().show_skip_intro...', 'info')
                     PlayerDialogs().show_skip_intro(self.skipintro_aniskip, intro_end)
-                    control.log('show_skip_intro returned', 'info')
                 break
-            xbmc.sleep(2000)  # Check every 2 seconds instead of 1
-        control.log(f'Intro monitoring loop ended after {loop_count} iterations', 'info')
+            xbmc.sleep(2000)  # Check every 2 seconds
 
     def _handle_outro_and_playing_next(self):
         """Handle outro skip and playing next functionality with fallbacks - optimized"""
@@ -363,7 +346,7 @@ class WatchlistPlayer(player):
 
     def setup_audio_and_subtitles(self):
         """Handle audio and subtitle setup with retry logic for debrid sources"""
-        control.log('setup_audio_and_subtitles called', 'info')
+        control.log('setup_audio_and_subtitles called', 'debug')
         if not control.getBool('general.kodi_language'):
             query = {
                 'jsonrpc': '2.0',
@@ -409,8 +392,8 @@ class WatchlistPlayer(player):
                     current_subtitle_stream = player_properties.get('currentsubtitle', {})
                     # If we have streams, we're good
                     if audio_streams or subtitle_streams:
-                        control.log(f'Found {len(audio_streams)} audio and {len(subtitle_streams)} subtitle streams')
-                        control.log(f'Current audio: {current_audio_stream}, Current subtitle: {current_subtitle_stream}')
+                        control.log(f'Found {len(audio_streams)} audio and {len(subtitle_streams)} subtitle streams', 'debug')
+                        control.log(f'Current audio: {current_audio_stream}, Current subtitle: {current_subtitle_stream}', 'debug')
                         break
                 # Wait before retry (shorter delay)
                 if attempt < 2:
@@ -449,11 +432,11 @@ class WatchlistPlayer(player):
 
             if preferred_found and target_audio_index is not None and target_audio_index != current_audio:
                 self.setAudioStream(target_audio_index)
-                control.log(f'Audio stream set to {target_audio_index} ({preferred_audio_streams}), was {current_audio}', 'info')
+                control.log(f'Audio stream set to {target_audio_index} ({preferred_audio_streams}), was {current_audio}', 'debug')
             elif preferred_found:
-                control.log(f'Audio stream already at {current_audio} ({preferred_audio_streams}), skipping', 'info')
+                control.log(f'Audio stream already at {current_audio} ({preferred_audio_streams}), skipping', 'debug')
             else:
-                control.log(f'No preferred audio ({preferred_audio_streams}) found, keeping default', 'info')
+                control.log(f'No preferred audio ({preferred_audio_streams}) found, keeping default', 'debug')
 
             # Set preferred subtitle stream
             subtitle_int = None
@@ -465,7 +448,7 @@ class WatchlistPlayer(player):
                 preffeded_subtitle_keyword = preffeded_subtitle_keyword.lower()
 
             # Log available subtitle streams for debugging
-            control.log(f'Available subtitle streams: {[(s.get("index"), s.get("language"), s.get("name")) for s in subtitle_streams]}', 'info')
+            control.log(f'Available subtitle streams: {[(s.get("index"), s.get("language"), s.get("name")) for s in subtitle_streams]}', 'debug')
 
             # Helper to detect partial subs (signs/songs/forced - not full dialogue)
             import re
@@ -484,7 +467,7 @@ class WatchlistPlayer(player):
                 return bool(partial_sub_pattern.search(name))
 
             # Type and Keyword filtering
-            control.log(f'Keyword filter: {control.getBool("general.subtitles.keyword")}, Type filter: {control.getBool("general.subtitles.type")}, Keyword: {preffeded_subtitle_keyword}', 'info')
+            control.log(f'Keyword filter: {control.getBool("general.subtitles.keyword")}, Type filter: {control.getBool("general.subtitles.type")}, Keyword: {preffeded_subtitle_keyword}', 'debug')
             if control.getBool('general.subtitles.keyword') or control.getBool('general.subtitles.type'):
                 for sub in subtitle_streams:
                     sub_name = sub.get('name', '')
@@ -500,7 +483,7 @@ class WatchlistPlayer(player):
                         if sub['language'] == preferred_subtitle_lang:
                             if sub[preffeded_subtitle_type]:
                                 subtitle_int = sub['index']
-                                control.log(f'Type matched: {sub_name}', 'info')
+                                control.log(f'Type matched: {sub_name}', 'debug')
                                 break
 
                     # Check for keyword match
@@ -510,11 +493,11 @@ class WatchlistPlayer(player):
                             if isinstance(preffeded_subtitle_keyword, list):
                                 if any(kw in sub_name_lower for kw in preffeded_subtitle_keyword):
                                     subtitle_int = sub['index']
-                                    control.log(f'Keyword matched: {sub_name}', 'info')
+                                    control.log(f'Keyword matched: {sub_name}', 'debug')
                                     break
                             elif preffeded_subtitle_keyword and preffeded_subtitle_keyword in sub_name_lower:
                                 subtitle_int = sub['index']
-                                control.log(f'Keyword matched: {sub_name}', 'info')
+                                control.log(f'Keyword matched: {sub_name}', 'debug')
                                 break
 
                 # fallback to first of preferred language if no type or keyword match
@@ -524,14 +507,14 @@ class WatchlistPlayer(player):
                         if sub['language'] == preferred_subtitle_lang:
                             if not is_partial_sub(sub.get('name', '')):
                                 subtitle_int = sub['index']
-                                control.log(f'Selected full dialogue sub: {sub.get("name")}', 'info')
+                                control.log(f'Selected full dialogue sub: {sub.get("name")}', 'debug')
                                 break
                     # Final fallback - any matching language
                     if subtitle_int is None:
                         for sub in subtitle_streams:
                             if sub['language'] == preferred_subtitle_lang:
                                 subtitle_int = sub['index']
-                                control.log(f'Fallback to sub: {sub.get("name")}', 'info')
+                                control.log(f'Fallback to sub: {sub.get("name")}', 'debug')
                                 break
             else:
                 # No type filter or keyword filter - prefer full dialogue subs over signs/songs
@@ -541,7 +524,7 @@ class WatchlistPlayer(player):
                         sub_name = sub.get('name', '')
                         if not is_partial_sub(sub_name):
                             subtitle_int = sub['index']
-                            control.log(f'Selected full dialogue sub: {sub_name}', 'info')
+                            control.log(f'Selected full dialogue sub: {sub_name}', 'debug')
                             break
 
                 # Second pass: if no full dialogue found, take any with preferred language
@@ -549,7 +532,7 @@ class WatchlistPlayer(player):
                     for sub in subtitle_streams:
                         if sub['language'] == preferred_subtitle_lang:
                             subtitle_int = sub['index']
-                            control.log(f'Fallback to sub: {sub.get("name")}', 'info')
+                            control.log(f'Fallback to sub: {sub.get("name")}', 'debug')
                             break
 
             if subtitle_int is None:
@@ -567,12 +550,12 @@ class WatchlistPlayer(player):
 
             if subtitle_int is not None:
                 if subtitle_int != current_sub_index:
-                    control.log(f'Setting subtitle stream to index {subtitle_int} (was {current_sub_index})', 'info')
+                    control.log(f'Setting subtitle stream to index {subtitle_int} (was {current_sub_index})', 'debug')
                     self.setSubtitleStream(subtitle_int)
                 else:
-                    control.log(f'Subtitle stream already set to {subtitle_int}, skipping', 'info')
+                    control.log(f'Subtitle stream already set to {subtitle_int}, skipping', 'debug')
             else:
-                control.log('No subtitle stream selected (subtitle_int is None)', 'info')
+                control.log('No subtitle stream selected (subtitle_int is None)', 'debug')
 
             # Get list of available audio languages
             audio_langs = [s.get('language', '') for s in audio_streams]
@@ -580,23 +563,23 @@ class WatchlistPlayer(player):
             # Simple subtitle visibility: show subs if user wants them
             if preferred_subtitle_lang == "none":
                 self.showSubtitles(False)
-                control.log('Subtitles hidden (preference is none)', 'info')
+                control.log('Subtitles hidden (preference is none)', 'debug')
             else:
                 self.showSubtitles(True)
-                control.log('Subtitles enabled', 'info')
+                control.log('Subtitles enabled', 'debug')
 
-            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}', 'info')
+            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}', 'debug')
 
     def process_aniskip(self):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
             skipintro_aniskip_res = aniskip.get_skip_times(self.mal_id, self.episode, 'op')
-            control.log(f'process_aniskip: mal_id={self.mal_id}, episode={self.episode}, result={skipintro_aniskip_res is not None}', 'info')
+            control.log(f'process_aniskip: mal_id={self.mal_id}, episode={self.episode}, result={skipintro_aniskip_res is not None}', 'debug')
             if skipintro_aniskip_res:
                 skip_times = skipintro_aniskip_res['results'][0]['interval']
                 self.skipintro_start = int(skip_times['startTime']) + self.skipintro_offset
                 self.skipintro_end = int(skip_times['endTime']) + self.skipintro_offset
                 self.skipintro_aniskip = True
-                control.log(f'AniSkip intro times: {self.skipintro_start}-{self.skipintro_end}', 'info')
+                control.log(f'AniSkip intro times: {self.skipintro_start}-{self.skipintro_end}', 'debug')
 
         if self.skipoutro_aniskip_enable and not self.skipoutro_aniskip:
             skipoutro_aniskip_res = aniskip.get_skip_times(self.mal_id, self.episode, 'ed')
@@ -642,12 +625,12 @@ class WatchlistPlayer(player):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
             embed_skipintro_start = control.getInt(f'{embed}.skipintro.start')
             embed_skipintro_end = control.getInt(f'{embed}.skipintro.end')
-            control.log(f'process_embed({embed}): skipintro_start={embed_skipintro_start}, skipintro_end={embed_skipintro_end}', 'info')
+            control.log(f'process_embed({embed}): skipintro_start={embed_skipintro_start}, skipintro_end={embed_skipintro_end}', 'debug')
             if embed_skipintro_start != -1:
                 self.skipintro_start = embed_skipintro_start + self.skipintro_offset
                 self.skipintro_end = embed_skipintro_end + self.skipintro_offset
                 self.skipintro_aniskip = True
-                control.log(f'Skip intro set: {self.skipintro_start}-{self.skipintro_end}', 'info')
+                control.log(f'Skip intro set: {self.skipintro_start}-{self.skipintro_end}', 'debug')
         if self.skipoutro_aniskip_enable and not self.skipoutro_aniskip:
             embed_skipoutro_start = control.getInt(f'{embed}.skipoutro.start')
             if embed_skipoutro_start != -1:
