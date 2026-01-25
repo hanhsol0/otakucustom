@@ -5,7 +5,18 @@ from resources.lib.endpoints import fanart, tmdb, tvdb
 from resources.lib.ui import database, control
 
 
-def collect_meta(anime_list):
+def collect_meta(anime_list, lightweight=False):
+    """
+    Fetch metadata for anime list.
+
+    Args:
+        anime_list: List of anime to fetch metadata for
+        lightweight: If True, skip heavy artwork fetching (faster for browse views)
+    """
+    # In lightweight mode, skip metadata fetching entirely - just use AniList data
+    if lightweight:
+        return
+
     # Prepare list of anime that need metadata
     anime_to_fetch = []
 

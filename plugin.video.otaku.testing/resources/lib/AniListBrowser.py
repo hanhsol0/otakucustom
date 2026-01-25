@@ -2348,7 +2348,8 @@ class AniListBrowser(BrowserBase):
     def process_recommendations_view(self, json_res, base_plugin_url, page):
         hasNextPage = json_res['pageInfo']['hasNextPage']
         res = [edge['node']['mediaRecommendation'] for edge in json_res['edges'] if edge['node']['mediaRecommendation']]
-        get_meta.collect_meta(res)
+        # Use lightweight mode - skip heavy artwork fetching for faster loading
+        get_meta.collect_meta(res, lightweight=True)
         mapfunc = partial(self.base_anilist_view, completed=self.open_completed())
         all_results = list(filter(lambda x: True if x else False, map(mapfunc, res)))
         all_results += self.handle_paging(hasNextPage, base_plugin_url, page)
@@ -2361,7 +2362,8 @@ class AniListBrowser(BrowserBase):
                 tnode = edge['node']
                 tnode['relationType'] = edge['relationType']
                 res.append(tnode)
-        get_meta.collect_meta(res)
+        # Use lightweight mode for faster loading
+        get_meta.collect_meta(res, lightweight=True)
         mapfunc = partial(self.base_anilist_view, completed=self.open_completed())
         all_results = list(filter(lambda x: True if x else False, map(mapfunc, res)))
         return all_results
