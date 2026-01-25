@@ -65,7 +65,7 @@ class Sources(BrowserBase):
         query1 = f'{show} "- {episode_zfill}"|"S{season_zfill}E{episode_zfill}"'
         search_tasks.append({
             'query': query1,
-            'params': {'f': '0', 'c': '1_0', 'q': query1.replace(' ', '+'), 's': 'downloads', 'o': 'desc'},
+            'params': {'f': '0', 'c': '1_2', 'q': query1.replace(' ', '+'), 's': 'downloads', 'o': 'desc'},
             'name': 'primary'
         })
 
@@ -84,7 +84,7 @@ class Sources(BrowserBase):
 
             search_tasks.append({
                 'query': query2,
-                'params': {'f': '0', 'c': '1_0', 'q': query2.replace(' ', '+'), 's': 'seeders', 'o': 'desc'},
+                'params': {'f': '0', 'c': '1_2', 'q': query2.replace(' ', '+'), 's': 'seeders', 'o': 'desc'},
                 'name': 'batch'
             })
 
@@ -92,7 +92,7 @@ class Sources(BrowserBase):
         query3 = query1  # Reuse primary query
         search_tasks.append({
             'query': query3,
-            'params': {'f': '0', 'c': '1_0', 'q': query3.replace(' ', '+')},
+            'params': {'f': '0', 'c': '1_2', 'q': query3.replace(' ', '+')},
             'name': 'fallback'
         })
 
@@ -111,7 +111,7 @@ class Sources(BrowserBase):
 
         search_tasks.append({
             'query': query4,
-            'params': {'f': '0', 'c': '1_0', 'q': query4.replace(' ', '+')},
+            'params': {'f': '0', 'c': '1_2', 'q': query4.replace(' ', '+')},
             'name': 'additional'
         })
 
@@ -146,7 +146,7 @@ class Sources(BrowserBase):
 
         params = {
             'f': '0',
-            'c': '1_0',
+            'c': '1_2',
             'q': query.replace(' ', '+'),
             's': 'downloads',
             'o': 'desc'
