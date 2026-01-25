@@ -459,6 +459,27 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
     Filter torrents based on season, episode, and part information.
     Uses improved regex patterns to handle a wider variety of media title formats.
     """
+    # Get anime titles for validation
+    show = database.get_show(mal_id)
+    anime_titles = []
+    if show:
+        import pickle
+        kodi_meta = pickle.loads(show.get('kodi_meta', pickle.dumps({})))
+        # Collect all possible titles
+        if kodi_meta.get('title_userPreferred'):
+            anime_titles.append(kodi_meta['title_userPreferred'].lower())
+        if kodi_meta.get('name'):
+            anime_titles.append(kodi_meta['name'].lower())
+        if kodi_meta.get('ename'):
+            anime_titles.append(kodi_meta['ename'].lower())
+        if kodi_meta.get('title_english'):
+            anime_titles.append(kodi_meta['title_english'].lower())
+        if kodi_meta.get('title_romaji'):
+            anime_titles.append(kodi_meta['title_romaji'].lower())
+
+    # Clean titles for matching
+    anime_titles_clean = [cleanTitle(t) for t in anime_titles if t]
+
     # Check for Large Animes or Tvdb Animes with season 0
     if season == 1:
         mal_mapping = database.get_mappings(mal_id, 'mal_id')
@@ -517,6 +538,23 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
             title = torrent['filename'].lower()
         else:
             title = torrent['name'].lower()
+
+        # Title validation: Check if torrent title contains any of the anime titles
+        if anime_titles_clean:
+            title_clean_for_match = cleanTitle(title)
+            title_matches = False
+            for anime_title in anime_titles_clean:
+                # Check if significant words from anime title appear in torrent title
+                anime_words = set(anime_title.split())
+                title_words = set(title_clean_for_match.split())
+                # Require at least 2 words match or 60% of anime title words
+                common_words = anime_words & title_words
+                if len(common_words) >= 2 or (len(anime_words) > 0 and len(common_words) / len(anime_words) >= 0.6):
+                    title_matches = True
+                    break
+            if not title_matches:
+                # Skip this torrent - title doesn't match anime
+                continue
 
         # Clean the title for extraction
         clean_title = clean_text(title)
