@@ -422,6 +422,7 @@ class WatchlistPlayer(player):
 
     def setup_audio_and_subtitles(self):
         """Handle audio and subtitle setup with retry logic for debrid sources"""
+        control.log('setup_audio_and_subtitles called', 'info')
         if not control.getBool('general.kodi_language'):
             query = {
                 'jsonrpc': '2.0',
@@ -556,10 +557,10 @@ class WatchlistPlayer(player):
                     subtitle_int = 0
 
             if subtitle_int is not None:
-                control.log(f'Setting subtitle stream to index {subtitle_int}')
+                control.log(f'Setting subtitle stream to index {subtitle_int}', 'info')
                 self.setSubtitleStream(subtitle_int)
             else:
-                control.log('No subtitle stream selected (subtitle_int is None)', 'warning')
+                control.log('No subtitle stream selected (subtitle_int is None)', 'info')
 
             # Get list of available audio languages
             audio_langs = [s.get('language', '') for s in audio_streams]
@@ -572,15 +573,15 @@ class WatchlistPlayer(player):
             # - If dub audio: respect dubsubtitles setting
             if preferred_subtitle_lang == "none":
                 self.showSubtitles(False)
-                control.log('Subtitles hidden (preference is none)')
+                control.log('Subtitles hidden (preference is none)', 'info')
             elif is_dub_audio and not control.getBool('general.dubsubtitles'):
                 self.showSubtitles(False)
-                control.log('Subtitles hidden (dub audio, dubsubtitles disabled)')
+                control.log('Subtitles hidden (dub audio, dubsubtitles disabled)', 'info')
             else:
                 self.showSubtitles(True)
-                control.log('Subtitles enabled')
+                control.log('Subtitles enabled', 'info')
 
-            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}, jpn_audio={is_japanese_audio}')
+            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}, jpn_audio={is_japanese_audio}', 'info')
 
     def process_aniskip(self):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
