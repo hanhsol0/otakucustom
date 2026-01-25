@@ -220,8 +220,14 @@ def FIND_RECOMMENDATIONS(payload, params):
 
 @Route('for_you')
 def FOR_YOU(payload, params):
-    page = int(params.get('page', 1))
-    control.draw_items(BROWSER.get_for_you(page), 'tvshows', view_mode=54)  # Info Wall view
+    from resources.lib.windows.for_you_window import open_for_you_window
+    anime_items = BROWSER.get_for_you_window_data()
+    if anime_items:
+        open_for_you_window(anime_items)
+    else:
+        # Fallback to standard view if no custom data
+        page = int(params.get('page', 1))
+        control.draw_items(BROWSER.get_for_you(page), 'tvshows', view_mode=54)
 
 
 @Route('dismiss_recommendation/*')

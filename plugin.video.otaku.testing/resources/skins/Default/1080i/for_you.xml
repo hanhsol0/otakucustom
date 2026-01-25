@@ -1,0 +1,500 @@
+<!--
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                         FOR YOU WINDOW                                     ║
+║                                                                           ║
+║  Custom window with filter toggle (TV Shows / Movies / All) and wall view ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+-->
+
+<window type="dialog">
+    <defaultcontrol>100</defaultcontrol>
+    <coordinates>
+        <left>0</left>
+        <top>0</top>
+    </coordinates>
+    <controls>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 1: BACKGROUND LAYERS                                     -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+
+        <!-- Black base layer -->
+        <control type="image">
+            <texture>white.png</texture>
+            <colordiffuse>FF000000</colordiffuse>
+        </control>
+
+        <!-- Fanart background -->
+        <control type="image">
+            <top>0</top>
+            <left>0</left>
+            <width>1920</width>
+            <height>1080</height>
+            <texture background="true">$INFO[Window().Property(otaku.fanart)]</texture>
+        </control>
+
+        <!-- Dark overlay on fanart (80% opacity) -->
+        <control type="image">
+            <top>0</top>
+            <left>0</left>
+            <width>1920</width>
+            <height>1080</height>
+            <texture background="true">white.png</texture>
+            <colordiffuse>CC000000</colordiffuse>
+        </control>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 2: HEADER WITH TITLE AND FILTER BUTTONS                  -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+
+        <control type="group">
+            <left>60</left>
+            <top>30</top>
+            <width>1800</width>
+            <height>60</height>
+
+            <!-- Title: For You -->
+            <control type="label">
+                <left>0</left>
+                <top>10</top>
+                <width>300</width>
+                <height>40</height>
+                <font>font37</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <align>left</align>
+                <label>[B]For You[/B]</label>
+            </control>
+
+            <!-- Filter Toggle Group - Centered -->
+            <control type="group">
+                <left>660</left>
+                <top>5</top>
+                <width>600</width>
+                <height>50</height>
+
+                <!-- Background pill for all buttons -->
+                <control type="image">
+                    <left>0</left>
+                    <top>0</top>
+                    <width>540</width>
+                    <height>50</height>
+                    <texture border="25">white.png</texture>
+                    <colordiffuse>44FFFFFF</colordiffuse>
+                </control>
+
+                <!-- TV Shows Button (ID: 100) -->
+                <control type="button" id="100">
+                    <left>5</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <font>font14</font>
+                    <textcolor>AAFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>TV Shows</label>
+                    <onleft>102</onleft>
+                    <onright>101</onright>
+                    <ondown>1000</ondown>
+                    <texturefocus border="20">$INFO[Window().Property(texture.white)]</texturefocus>
+                    <texturenofocus border="20">-</texturenofocus>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                </control>
+
+                <!-- Movies Button (ID: 101) -->
+                <control type="button" id="101">
+                    <left>185</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <font>font14</font>
+                    <textcolor>AAFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>Movies</label>
+                    <onleft>100</onleft>
+                    <onright>102</onright>
+                    <ondown>1000</ondown>
+                    <texturefocus border="20">$INFO[Window().Property(texture.white)]</texturefocus>
+                    <texturenofocus border="20">-</texturenofocus>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                </control>
+
+                <!-- All Button (ID: 102) -->
+                <control type="button" id="102">
+                    <left>365</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <font>font14</font>
+                    <textcolor>AAFFFFFF</textcolor>
+                    <focusedcolor>FFFFFFFF</focusedcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>All</label>
+                    <onleft>101</onleft>
+                    <onright>100</onright>
+                    <ondown>1000</ondown>
+                    <texturefocus border="20">$INFO[Window().Property(texture.white)]</texturefocus>
+                    <texturenofocus border="20">-</texturenofocus>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                </control>
+
+                <!-- Active indicator for TV Shows -->
+                <control type="image">
+                    <visible>String.IsEqual(Window().Property(filter.active),tv)</visible>
+                    <left>5</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <texture border="20">white.png</texture>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                </control>
+
+                <!-- Active indicator for Movies -->
+                <control type="image">
+                    <visible>String.IsEqual(Window().Property(filter.active),movie)</visible>
+                    <left>185</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <texture border="20">white.png</texture>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                </control>
+
+                <!-- Active indicator for All -->
+                <control type="image">
+                    <visible>String.IsEqual(Window().Property(filter.active),all)</visible>
+                    <left>365</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <texture border="20">white.png</texture>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                </control>
+
+                <!-- Active label for TV Shows -->
+                <control type="label">
+                    <visible>String.IsEqual(Window().Property(filter.active),tv)</visible>
+                    <left>5</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <font>font14</font>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>[B]TV Shows[/B]</label>
+                </control>
+
+                <!-- Active label for Movies -->
+                <control type="label">
+                    <visible>String.IsEqual(Window().Property(filter.active),movie)</visible>
+                    <left>185</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <font>font14</font>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>[B]Movies[/B]</label>
+                </control>
+
+                <!-- Active label for All -->
+                <control type="label">
+                    <visible>String.IsEqual(Window().Property(filter.active),all)</visible>
+                    <left>365</left>
+                    <top>5</top>
+                    <width>170</width>
+                    <height>40</height>
+                    <font>font14</font>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>[B]All[/B]</label>
+                </control>
+            </control>
+
+            <!-- Item count label -->
+            <control type="label">
+                <left>1500</left>
+                <top>10</top>
+                <width>300</width>
+                <height>40</height>
+                <font>font12</font>
+                <textcolor>88FFFFFF</textcolor>
+                <align>right</align>
+                <label>$INFO[Window().Property(item.count)]</label>
+            </control>
+        </control>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 3: WALL VIEW (WRAP LIST) - ID: 1000                      -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+
+        <control type="wraplist" id="1000">
+            <left>60</left>
+            <top>110</top>
+            <width>1050</width>
+            <height>950</height>
+            <onup>100</onup>
+            <ondown>1000</ondown>
+            <onleft>1000</onleft>
+            <onright>1000</onright>
+            <scrolltime tween="sine" easing="out">200</scrolltime>
+            <itemgap>10</itemgap>
+            <focusposition>1</focusposition>
+            <pagecontrol>-</pagecontrol>
+
+            <!-- ───────────────────────────────────────────────────────────── -->
+            <!-- ITEMLAYOUT: Unfocused poster card                              -->
+            <!-- ───────────────────────────────────────────────────────────── -->
+            <itemlayout height="300" width="200">
+                <!-- Poster background -->
+                <control type="image">
+                    <left>5</left>
+                    <top>5</top>
+                    <width>190</width>
+                    <height>270</height>
+                    <texture>white.png</texture>
+                    <colordiffuse>22FFFFFF</colordiffuse>
+                </control>
+
+                <!-- Poster image -->
+                <control type="image">
+                    <left>5</left>
+                    <top>5</top>
+                    <width>190</width>
+                    <height>270</height>
+                    <texture>$INFO[ListItem.Property(poster)]</texture>
+                    <aspectratio>scale</aspectratio>
+                </control>
+
+                <!-- Media type indicator (TV/Movie) -->
+                <control type="image">
+                    <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
+                    <left>155</left>
+                    <top>10</top>
+                    <width>35</width>
+                    <height>20</height>
+                    <texture>white.png</texture>
+                    <colordiffuse>FFFF6B6B</colordiffuse>
+                </control>
+                <control type="label">
+                    <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
+                    <left>155</left>
+                    <top>10</top>
+                    <width>35</width>
+                    <height>20</height>
+                    <font>font10</font>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>M</label>
+                </control>
+            </itemlayout>
+
+            <!-- ───────────────────────────────────────────────────────────── -->
+            <!-- FOCUSEDLAYOUT: Focused poster card with info                   -->
+            <!-- ───────────────────────────────────────────────────────────── -->
+            <focusedlayout height="300" width="200">
+                <!-- Glow effect background -->
+                <control type="image">
+                    <left>0</left>
+                    <top>0</top>
+                    <width>200</width>
+                    <height>280</height>
+                    <texture>white.png</texture>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                    <animation effect="fade" start="100" end="60" time="500" reversible="true" loop="true">conditional</animation>
+                </control>
+
+                <!-- Poster image -->
+                <control type="image">
+                    <left>5</left>
+                    <top>5</top>
+                    <width>190</width>
+                    <height>270</height>
+                    <texture>$INFO[ListItem.Property(poster)]</texture>
+                    <aspectratio>scale</aspectratio>
+                </control>
+
+                <!-- Media type indicator (TV/Movie) -->
+                <control type="image">
+                    <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
+                    <left>155</left>
+                    <top>10</top>
+                    <width>35</width>
+                    <height>20</height>
+                    <texture>white.png</texture>
+                    <colordiffuse>FFFF6B6B</colordiffuse>
+                </control>
+                <control type="label">
+                    <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
+                    <left>155</left>
+                    <top>10</top>
+                    <width>35</width>
+                    <height>20</height>
+                    <font>font10</font>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>M</label>
+                </control>
+            </focusedlayout>
+        </control>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 4: INFO PANEL (Right side, shows on focus)                -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+
+        <control type="group">
+            <visible>Control.HasFocus(1000)</visible>
+            <left>1100</left>
+            <top>110</top>
+            <width>750</width>
+            <height>950</height>
+
+            <!-- Semi-transparent background -->
+            <control type="image">
+                <left>0</left>
+                <top>0</top>
+                <width>750</width>
+                <height>500</height>
+                <texture>white.png</texture>
+                <colordiffuse>88000000</colordiffuse>
+            </control>
+
+            <!-- Title -->
+            <control type="label">
+                <left>20</left>
+                <top>20</top>
+                <width>710</width>
+                <height>40</height>
+                <font>font16</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <align>left</align>
+                <scroll>true</scroll>
+                <label>[B]$INFO[Container(1000).ListItem.Property(release_title)][/B]</label>
+            </control>
+
+            <!-- Year / Episodes / Status -->
+            <control type="label">
+                <left>20</left>
+                <top>65</top>
+                <width>710</width>
+                <height>25</height>
+                <font>font12</font>
+                <textcolor>88FFFFFF</textcolor>
+                <align>left</align>
+                <label>$INFO[Container(1000).ListItem.Property(year)] | $INFO[Container(1000).ListItem.Property(episodes)] eps | $INFO[Container(1000).ListItem.Property(status)]</label>
+            </control>
+
+            <!-- Genres -->
+            <control type="label">
+                <left>20</left>
+                <top>95</top>
+                <width>710</width>
+                <height>25</height>
+                <font>font12</font>
+                <textcolor>FF4da6ff</textcolor>
+                <align>left</align>
+                <label>$INFO[Container(1000).ListItem.Property(genres)]</label>
+            </control>
+
+            <!-- Rating bar -->
+            <control type="group">
+                <left>20</left>
+                <top>130</top>
+                <width>710</width>
+                <height>30</height>
+
+                <!-- Score background -->
+                <control type="image">
+                    <left>0</left>
+                    <top>0</top>
+                    <width>60</width>
+                    <height>30</height>
+                    <texture>white.png</texture>
+                    <colordiffuse>FF4da6ff</colordiffuse>
+                </control>
+
+                <!-- Score value -->
+                <control type="label">
+                    <left>0</left>
+                    <top>0</top>
+                    <width>60</width>
+                    <height>30</height>
+                    <font>font14</font>
+                    <textcolor>FFFFFFFF</textcolor>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <label>[B]$INFO[Container(1000).ListItem.Property(rating)][/B]</label>
+                </control>
+
+                <!-- Recommendation count -->
+                <control type="label">
+                    <visible>!String.IsEmpty(Container(1000).ListItem.Property(rec_count))</visible>
+                    <left>70</left>
+                    <top>0</top>
+                    <width>300</width>
+                    <height>30</height>
+                    <font>font12</font>
+                    <textcolor>88FFFFFF</textcolor>
+                    <align>left</align>
+                    <aligny>center</aligny>
+                    <label>Recommended by $INFO[Container(1000).ListItem.Property(rec_count)] of your anime</label>
+                </control>
+            </control>
+
+            <!-- Plot -->
+            <control type="textbox">
+                <left>20</left>
+                <top>175</top>
+                <width>710</width>
+                <height>300</height>
+                <font>font12</font>
+                <textcolor>AAFFFFFF</textcolor>
+                <align>left</align>
+                <autoscroll delay="5000" time="2000" repeat="5000"></autoscroll>
+                <label>$INFO[Container(1000).ListItem.Property(plot)]</label>
+            </control>
+        </control>
+
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 5: LOADING INDICATOR                                      -->
+        <!-- ═══════════════════════════════════════════════════════════════ -->
+
+        <control type="group">
+            <visible>String.IsEqual(Window().Property(loading),true)</visible>
+            <left>0</left>
+            <top>0</top>
+            <width>1920</width>
+            <height>1080</height>
+
+            <!-- Dark overlay -->
+            <control type="image">
+                <width>1920</width>
+                <height>1080</height>
+                <texture>white.png</texture>
+                <colordiffuse>CC000000</colordiffuse>
+            </control>
+
+            <!-- Loading text -->
+            <control type="label">
+                <left>0</left>
+                <top>500</top>
+                <width>1920</width>
+                <height>40</height>
+                <font>font16</font>
+                <textcolor>FFFFFFFF</textcolor>
+                <align>center</align>
+                <label>Loading recommendations...</label>
+            </control>
+        </control>
+
+    </controls>
+</window>

@@ -1579,6 +1579,94 @@ class AniListBrowser(BrowserBase):
 
         return results
 
+    def get_for_you_window_data(self):
+        """
+        Get raw 'For You' data formatted for the custom window display.
+        Returns all items (no pagination) with properties for window display.
+        """
+        import time
+        from resources.lib.WatchlistFlavor import WatchlistFlavor
+
+        # Check cache first
+        cached_recs, cache_time = database.get_for_you_cache()
+        cache_valid = cache_time and (time.time() - cache_time) < 86400
+
+        all_recs = None
+        if cached_recs and cache_valid:
+            all_recs = cached_recs
+        else:
+            # Try to build from watchlist
+            flavor = WatchlistFlavor.get_update_flavor()
+            if flavor:
+                recs = self._build_for_you_from_watchlist(flavor.flavor_name)
+                if recs:
+                    recs = self._mix_in_trending(recs, flavor.flavor_name)
+                    database.save_for_you_cache(recs)
+                    all_recs = recs
+
+        if not all_recs:
+            # Fallback: return empty - window will show message
+            return []
+
+        # Filter out dismissed/watched
+        dismissed = database.get_dismissed_recommendations()
+        completed = self.open_completed()
+
+        filtered = [r for r in all_recs
+                    if r.get('idMal') not in dismissed
+                    and str(r.get('idMal')) not in completed]
+
+        # Collect metadata
+        get_meta.collect_meta(filtered)
+
+        # Format for window display
+        window_items = []
+        for res in filtered:
+            mal_id = res.get('idMal')
+            if not mal_id:
+                continue
+
+            # Get cached metadata for artwork
+            show_meta = database.get_show_meta(mal_id)
+            kodi_meta = pickle.loads(show_meta.get('art')) if show_meta else {}
+
+            title = res['title'].get(self.title_lang) or res['title'].get('romaji', '')
+
+            # Determine media type from format
+            format_type = res.get('format', 'TV')
+            media_type = 'movie' if format_type == 'MOVIE' else 'tv'
+
+            # Clean description
+            desc = res.get('description', '')
+            if desc:
+                desc = desc.replace('<i>', '[I]').replace('</i>', '[/I]')
+                desc = desc.replace('<b>', '[B]').replace('</b>', '[/B]')
+                desc = desc.replace('<br>', '[CR]').replace('\n', '')
+
+            # Build window item
+            item = {
+                'id': mal_id,
+                'mal_id': mal_id,
+                'anilist_id': res.get('id'),
+                'release_title': title,
+                'poster': kodi_meta.get('poster', res.get('coverImage', {}).get('extraLarge', '')),
+                'fanart': kodi_meta.get('fanart', res.get('bannerImage', '')),
+                'plot': desc,
+                'genres': ', '.join(res.get('genres', [])),
+                'media_type': media_type,
+                'format': format_type,
+                'status': res.get('status', ''),
+                'episodes': str(res.get('episodes', '')),
+                'year': str(res.get('seasonYear', '')),
+                'rating': str(res.get('averageScore', '')),
+                'rec_count': str(res.get('_rec_count', '')),
+                'for_you_score': str(res.get('_for_you_score', '')),
+            }
+
+            window_items.append(item)
+
+        return window_items
+
     def get_relations(self, mal_id):
         variables = {
             'idMal': mal_id

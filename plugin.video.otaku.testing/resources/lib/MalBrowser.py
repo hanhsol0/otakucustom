@@ -142,6 +142,12 @@ class MalBrowser(BrowserBase):
         anilist = AniListBrowser()
         return anilist.get_for_you(page)
 
+    def get_for_you_window_data(self):
+        """Delegate to AniListBrowser for For You window data"""
+        from resources.lib.AniListBrowser import AniListBrowser
+        anilist = AniListBrowser()
+        return anilist.get_for_you_window_data()
+
     def get_recommendations(self, mal_id, page):
         recommendations = database.get(self.get_base_res, 24, f'{self._BASE_URL}/anime/{mal_id}/recommendations')
         get_meta.collect_meta(recommendations['data'])
