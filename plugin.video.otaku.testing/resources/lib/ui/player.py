@@ -543,11 +543,26 @@ class WatchlistPlayer(player):
                             subtitle_int = sub['index']
                             break
             else:
-                # No type filter or keyword filter, just check for preferred language
+                # No type filter or keyword filter - prefer full dialogue subs over signs/songs
+                signs_only_keywords = ['sign', 'song', 's&s', 'forced']
+
+                # First pass: find preferred language, skip signs-only subs
                 for sub in subtitle_streams:
                     if sub['language'] == preferred_subtitle_lang:
-                        subtitle_int = sub['index']
-                        break
+                        sub_name_lower = sub.get('name', '').lower()
+                        # Skip if it's a signs/songs only track
+                        if not any(kw in sub_name_lower for kw in signs_only_keywords):
+                            subtitle_int = sub['index']
+                            control.log(f'Selected full dialogue sub: {sub.get("name")}', 'info')
+                            break
+
+                # Second pass: if no full dialogue found, take any with preferred language
+                if subtitle_int is None:
+                    for sub in subtitle_streams:
+                        if sub['language'] == preferred_subtitle_lang:
+                            subtitle_int = sub['index']
+                            control.log(f'Fallback to sub: {sub.get("name")}', 'info')
+                            break
 
             if subtitle_int is None:
                 # default-subtitle fallback
