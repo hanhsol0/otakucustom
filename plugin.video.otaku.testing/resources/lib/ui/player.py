@@ -530,6 +530,7 @@ class WatchlistPlayer(player):
                 return bool(signs_only_pattern.search(name))
 
             # Type and Keyword filtering
+            control.log(f'Keyword filter: {control.getBool("general.subtitles.keyword")}, Type filter: {control.getBool("general.subtitles.type")}, Keyword: {preffeded_subtitle_keyword}', 'info')
             if control.getBool('general.subtitles.keyword') or control.getBool('general.subtitles.type'):
                 for sub in subtitle_streams:
 
