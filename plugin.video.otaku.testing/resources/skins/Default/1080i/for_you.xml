@@ -492,11 +492,11 @@
                 <scrolltime tween="sine" easing="out">200</scrolltime>
                 <pagecontrol>-</pagecontrol>
 
-                <!-- Unfocused poster with title below - 4 COLUMNS LAYOUT -->
-                <itemlayout height="470" width="320">
+                <!-- Unfocused poster with title below - 4 COLUMNS LAYOUT (minimal padding) -->
+                <itemlayout height="470" width="280">
                     <!-- Poster shadow -->
                     <control type="image">
-                        <left>52</left>
+                        <left>32</left>
                         <top>12</top>
                         <width>216</width>
                         <height>326</height>
@@ -506,7 +506,7 @@
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>50</left>
+                        <left>30</left>
                         <top>10</top>
                         <width>220</width>
                         <height>330</height>
@@ -517,18 +517,18 @@
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>195</left>
+                        <left>160</left>
                         <top>18</top>
-                        <width>65</width>
+                        <width>80</width>
                         <height>24</height>
                         <texture>white.png</texture>
                         <colordiffuse>EEFF6B6B</colordiffuse>
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>195</left>
+                        <left>160</left>
                         <top>18</top>
-                        <width>65</width>
+                        <width>80</width>
                         <height>24</height>
                         <font>font10</font>
                         <textcolor>FFFFFFFF</textcolor>
@@ -540,7 +540,7 @@
                     <!-- TV badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>220</left>
+                        <left>200</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -549,7 +549,7 @@
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>220</left>
+                        <left>200</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -562,9 +562,9 @@
 
                     <!-- Title below poster -->
                     <control type="label">
-                        <left>10</left>
+                        <left>0</left>
                         <top>350</top>
-                        <width>300</width>
+                        <width>280</width>
                         <height>28</height>
                         <font>font12</font>
                         <textcolor>AAFFFFFF</textcolor>
@@ -574,9 +574,9 @@
 
                     <!-- Year below title -->
                     <control type="label">
-                        <left>10</left>
+                        <left>0</left>
                         <top>378</top>
-                        <width>300</width>
+                        <width>280</width>
                         <height>22</height>
                         <font>font10</font>
                         <textcolor>55FFFFFF</textcolor>
@@ -585,11 +585,11 @@
                     </control>
                 </itemlayout>
 
-                <!-- Focused poster: Blue glow border with title - 4 COLUMNS LAYOUT -->
-                <focusedlayout height="470" width="320">
+                <!-- Focused poster: Blue glow border with title - 4 COLUMNS LAYOUT (minimal padding) -->
+                <focusedlayout height="470" width="280">
                     <!-- Glow effect -->
                     <control type="image">
-                        <left>40</left>
+                        <left>20</left>
                         <top>0</top>
                         <width>240</width>
                         <height>350</height>
@@ -599,7 +599,7 @@
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>50</left>
+                        <left>30</left>
                         <top>10</top>
                         <width>220</width>
                         <height>330</height>
@@ -610,18 +610,18 @@
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>195</left>
+                        <left>160</left>
                         <top>18</top>
-                        <width>65</width>
+                        <width>80</width>
                         <height>24</height>
                         <texture>white.png</texture>
                         <colordiffuse>FFFF6B6B</colordiffuse>
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>195</left>
+                        <left>160</left>
                         <top>18</top>
-                        <width>65</width>
+                        <width>80</width>
                         <height>24</height>
                         <font>font10</font>
                         <textcolor>FFFFFFFF</textcolor>
@@ -633,7 +633,7 @@
                     <!-- TV badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>220</left>
+                        <left>200</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -642,7 +642,7 @@
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>220</left>
+                        <left>200</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -655,9 +655,9 @@
 
                     <!-- Title below poster -->
                     <control type="label">
-                        <left>10</left>
+                        <left>0</left>
                         <top>360</top>
-                        <width>300</width>
+                        <width>280</width>
                         <height>28</height>
                         <font>font12</font>
                         <textcolor>FFFFFFFF</textcolor>
@@ -667,9 +667,9 @@
 
                     <!-- Year below title -->
                     <control type="label">
-                        <left>10</left>
+                        <left>0</left>
                         <top>388</top>
-                        <width>300</width>
+                        <width>280</width>
                         <height>22</height>
                         <font>font10</font>
                         <textcolor>88FFFFFF</textcolor>
