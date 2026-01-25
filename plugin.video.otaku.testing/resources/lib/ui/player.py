@@ -233,7 +233,7 @@ class WatchlistPlayer(player):
         # For debrid sources, wait a moment for Kodi to parse embedded streams
         if self.type not in ['embed', 'direct']:
             # Wait for streams to be fully loaded for debrid/torrent sources
-            xbmc.sleep(1500)  # 1.5 second delay for stream parsing
+            xbmc.sleep(500)  # 0.5 second delay for stream parsing
             self.setup_audio_and_subtitles()
         elif self.provider in ['aniwave', 'h!anime']:
             self.setup_audio_and_subtitles()
@@ -370,9 +370,6 @@ class WatchlistPlayer(player):
             preferred_lang = lang_map.get(preferred_lang_code, 'en')
             control.log(f'Looking for {preferred_lang_code} ({preferred_lang}) subtitles from OpenSubtitles...')
 
-            # Small delay to ensure video is playing
-            xbmc.sleep(1000)
-
             # Try to fetch using OpenSubtitles API (fully automatic)
             if opensubtitles.is_enabled():
                 # Get actual anime title from database
@@ -468,9 +465,9 @@ class WatchlistPlayer(player):
                     if audio_streams or subtitle_streams:
                         control.log(f'Found {len(audio_streams)} audio and {len(subtitle_streams)} subtitle streams')
                         break
-                # Wait before retry
+                # Wait before retry (shorter delay)
                 if attempt < 2:
-                    xbmc.sleep(1000)
+                    xbmc.sleep(300)
 
             if not audio_streams and not subtitle_streams:
                 control.log('No audio/subtitle streams found after retries', 'warning')
