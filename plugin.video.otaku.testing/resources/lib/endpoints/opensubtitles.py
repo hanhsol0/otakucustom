@@ -6,6 +6,7 @@ API Documentation: https://opensubtitles.stoplight.io/docs/opensubtitles-api
 import os
 import struct
 import requests
+import xbmcvfs
 from resources.lib.ui import control
 
 API_BASE = "https://api.opensubtitles.com/api/v1"
@@ -342,7 +343,7 @@ def download_subtitle(file_id):
                 sub_response = requests.get(download_link, timeout=15)
                 if sub_response.status_code == 200:
                     # Save to Kodi's temp directory
-                    temp_dir = control.translatePath('special://temp/')
+                    temp_dir = xbmcvfs.translatePath('special://temp/')
                     sub_path = os.path.join(temp_dir, 'opensubtitles_temp.srt')
 
                     with open(sub_path, 'wb') as f:
