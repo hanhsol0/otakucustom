@@ -515,21 +515,21 @@ class WatchlistPlayer(player):
             # Log available subtitle streams for debugging
             control.log(f'Available subtitle streams: {[(s.get("index"), s.get("language"), s.get("name")) for s in subtitle_streams]}', 'info')
 
-            # Helper to detect signs/songs only subs
+            # Helper to detect partial subs (signs/songs/forced - not full dialogue)
             import re
-            signs_only_pattern = re.compile(
-                r'[\(\[]?\s*(signs?|songs?|s&s|signs?\s*[/&]\s*songs?)\s*[\)\]]?'
-                r'|signs?\s+only|songs?\s+only',
+            partial_sub_pattern = re.compile(
+                r'[\(\[]?\s*(signs?|songs?|s&s|signs?\s*[/&]\s*songs?|forced)\s*[\)\]]?'
+                r'|signs?\s+only|songs?\s+only|^forced$',
                 re.IGNORECASE
             )
 
-            def is_signs_only(name):
-                """Check if subtitle is signs/songs only (not full dialogue)"""
+            def is_partial_sub(name):
+                """Check if subtitle is partial (signs/songs/forced - not full dialogue)"""
                 if not name:
                     return False
                 if re.search(r'dialogue|full', name, re.IGNORECASE):
                     return False
-                return bool(signs_only_pattern.search(name))
+                return bool(partial_sub_pattern.search(name))
 
             # Type and Keyword filtering
             control.log(f'Keyword filter: {control.getBool("general.subtitles.keyword")}, Type filter: {control.getBool("general.subtitles.type")}, Keyword: {preffeded_subtitle_keyword}', 'info')
@@ -538,7 +538,7 @@ class WatchlistPlayer(player):
                     sub_name = sub.get('name', '')
 
                     # Skip signs-only subs in type/keyword matching (unless explicitly looking for signs)
-                    if is_signs_only(sub_name):
+                    if is_partial_sub(sub_name):
                         looking_for_signs = isinstance(preffeded_subtitle_keyword, list) and any(kw in ['signs', 'songs'] for kw in preffeded_subtitle_keyword)
                         if not looking_for_signs:
                             continue
@@ -570,7 +570,7 @@ class WatchlistPlayer(player):
                 if subtitle_int is None:
                     for sub in subtitle_streams:
                         if sub['language'] == preferred_subtitle_lang:
-                            if not is_signs_only(sub.get('name', '')):
+                            if not is_partial_sub(sub.get('name', '')):
                                 subtitle_int = sub['index']
                                 control.log(f'Selected full dialogue sub: {sub.get("name")}', 'info')
                                 break
@@ -587,7 +587,7 @@ class WatchlistPlayer(player):
                 for sub in subtitle_streams:
                     if sub['language'] == preferred_subtitle_lang:
                         sub_name = sub.get('name', '')
-                        if not is_signs_only(sub_name):
+                        if not is_partial_sub(sub_name):
                             subtitle_int = sub['index']
                             control.log(f'Selected full dialogue sub: {sub_name}', 'info')
                             break
