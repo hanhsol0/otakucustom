@@ -229,10 +229,12 @@ class Sources(GetSources):
         if all_sources is None:
             all_sources = {'cached': [], 'uncached': []}
 
+        control.log(f"Nyaa returned: {len(all_sources.get('cached', []))} cached, {len(all_sources.get('uncached', []))} uncached", 'info')
         self.torrentUnCacheSources += all_sources['uncached']
         self.torrentCacheSources += all_sources['cached']
         self.torrentSources += all_sources['cached'] + all_sources['uncached']
-        self.remainingProviders.remove('nyaa')
+        if 'nyaa' in self.remainingProviders:
+            self.remainingProviders.remove('nyaa')
 
     def animetosho_worker(self, query, mal_id, episode, status, media_type, rescrape):
         if rescrape:
@@ -244,10 +246,12 @@ class Sources(GetSources):
         if all_sources is None:
             all_sources = {'cached': [], 'uncached': []}
 
+        control.log(f"AnimeTosho returned: {len(all_sources.get('cached', []))} cached, {len(all_sources.get('uncached', []))} uncached", 'info')
         self.torrentUnCacheSources += all_sources['uncached']
         self.torrentCacheSources += all_sources['cached']
         self.torrentSources += all_sources['cached'] + all_sources['uncached']
-        self.remainingProviders.remove('animetosho')
+        if 'animetosho' in self.remainingProviders:
+            self.remainingProviders.remove('animetosho')
 
     # embeds #
     def animepahe_worker(self, mal_id, episode, rescrape):
