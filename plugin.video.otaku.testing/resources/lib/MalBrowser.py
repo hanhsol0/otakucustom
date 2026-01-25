@@ -1651,7 +1651,7 @@ class MalBrowser(BrowserBase):
             start_date = res['aired']['from']
             kodi_meta['premiered'] = start_date[:10]
             kodi_meta['year'] = res.get('year', int(start_date[:3]))
-        except TypeError:
+        except (TypeError, KeyError):
             pass
 
         if isinstance(res.get('score'), float):
