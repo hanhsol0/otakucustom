@@ -542,7 +542,7 @@ class WatchlistPlayer(player):
                 self.showSubtitles(True)
                 control.log('Subtitles enabled', 'info')
 
-            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}, jpn_audio={is_japanese_audio}', 'info')
+            control.log(f'Subtitle setup complete: stream={subtitle_int}, audio_langs={audio_langs}, pref_audio={preferred_audio_streams}, pref_sub={preferred_subtitle_lang}', 'info')
 
     def process_aniskip(self):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
