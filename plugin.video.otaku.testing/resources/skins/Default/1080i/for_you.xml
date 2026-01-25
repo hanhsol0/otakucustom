@@ -511,7 +511,7 @@
                         <width>380</width>
                         <height>394</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
-                        <aspectratio>scale</aspectratio>
+                        <aspectratio>keep</aspectratio>
                     </control>
 
                     <!-- Movie badge -->
@@ -581,7 +581,7 @@
                         <width>380</width>
                         <height>394</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
-                        <aspectratio>scale</aspectratio>
+                        <aspectratio>keep</aspectratio>
                     </control>
 
                     <!-- Movie badge -->

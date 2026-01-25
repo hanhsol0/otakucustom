@@ -11,17 +11,26 @@ def _format_items_for_wall(items):
             continue
 
         info = item.get('info', {})
+        image_data = item.get('image', {})
 
-        # Get poster from multiple possible sources
-        poster = item.get('poster') or item.get('image') or ''
+        # Handle image which can be a string URL or a dict with multiple URLs
+        if isinstance(image_data, dict):
+            poster = image_data.get('poster') or image_data.get('icon') or image_data.get('thumb') or ''
+            fanart = image_data.get('fanart', [])
+            if isinstance(fanart, list) and fanart:
+                fanart = fanart[0]  # Get first fanart
+            elif not fanart:
+                fanart = poster
+            banner = image_data.get('banner') or poster
+        else:
+            poster = image_data or item.get('poster') or ''
+            fanart = item.get('fanart') or poster
+            banner = item.get('banner') or poster
 
-        # Handle case where image is a dict containing poster/icon/thumb URLs
-        if isinstance(poster, dict):
-            poster = poster.get('poster') or poster.get('icon') or poster.get('thumb') or ''
-
-        # Debug: log if poster is missing
-        if not poster:
-            control.log(f"[INFO_WALL] Missing poster for: {item.get('name', 'Unknown')}", "warning")
+        # Get genres - can be list of strings or list of dicts with 'name' key
+        genres = info.get('genre', [])
+        if genres and isinstance(genres[0], dict):
+            genres = [g.get('name', '') for g in genres]
 
         formatted_item = {
             'mal_id': info.get('UniqueIDs', {}).get('mal_id', ''),
@@ -29,12 +38,12 @@ def _format_items_for_wall(items):
             'release_title': item.get('name', ''),
             'poster': poster,
             'image': poster,
-            'fanart': item.get('fanart') or poster,
-            'banner': item.get('banner') or poster,
+            'fanart': fanart,
+            'banner': banner,
             'plot': info.get('plot', ''),
-            'genre': info.get('genre', []),
-            'studio': info.get('studio', []),
-            'year': info.get('year', ''),
+            'genres': ', '.join(genres) if genres else '',  # XML expects 'genres' not 'genre'
+            'studio': ', '.join(info.get('studio', [])) if info.get('studio') else '',
+            'year': str(info.get('year', '')) if info.get('year') else '',
             'premiered': info.get('premiered', ''),
             'status': info.get('status', ''),
             'media_type': 'MOVIE' if info.get('mediatype') == 'movie' else 'TV',
@@ -42,10 +51,12 @@ def _format_items_for_wall(items):
             'episodes': '',
         }
 
-        # Handle rating
+        # Handle rating - can be dict with 'score' or direct value
         rating_info = info.get('rating', {})
         if isinstance(rating_info, dict) and rating_info.get('score'):
             formatted_item['rating'] = str(rating_info['score'])
+        elif isinstance(rating_info, (int, float)):
+            formatted_item['rating'] = str(rating_info)
 
         formatted.append(formatted_item)
 
