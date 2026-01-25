@@ -87,6 +87,15 @@ class Sources(GetSources):
         enabled_debrids = control.enabled_debrid()
         enabled_clouds = control.enabled_cloud()
 
+        # Debrid Priority Mode: Skip embeds when debrid + autoplay enabled for faster playback
+        debrid_priority = (
+            any(enabled_debrids.values()) and
+            control.getInt('general.playstyle.episode') == 0 and
+            control.getBool('general.debrid.priority')
+        )
+        if debrid_priority:
+            control.log('Debrid Priority Mode: Skipping embed providers for faster autoplay', 'info')
+
         # Activate cloud inspection only if the same debrid service is enabled for both
         common_debrids = [
             service for service, is_enabled in enabled_debrids.items()
@@ -128,48 +137,46 @@ class Sources(GetSources):
         else:
             self.remainingProviders.remove('Local Inspection')
 
-        # embeds #
-        if control.getBool('provider.animepahe'):
+        # embeds # (skip in debrid priority mode for faster playback)
+        if not debrid_priority and control.getBool('provider.animepahe'):
             t = threading.Thread(target=self.animepahe_worker, args=(mal_id, episode, rescrape))
             t.start()
             self.threads.append(t)
         else:
-            self.remainingProviders.remove('animepahe')
+            if 'animepahe' in self.remainingProviders:
+                self.remainingProviders.remove('animepahe')
 
-        if control.getBool('provider.animix'):
+        if not debrid_priority and control.getBool('provider.animix'):
             t = threading.Thread(target=self.animix_worker, args=(mal_id, episode, rescrape))
             t.start()
             self.threads.append(t)
         else:
-            self.remainingProviders.remove('animix')
+            if 'animix' in self.remainingProviders:
+                self.remainingProviders.remove('animix')
 
-        if control.getBool('provider.aniwave'):
+        if not debrid_priority and control.getBool('provider.aniwave'):
             t = threading.Thread(target=self.aniwave_worker, args=(mal_id, episode, rescrape))
             t.start()
             self.threads.append(t)
         else:
-            self.remainingProviders.remove('aniwave')
+            if 'aniwave' in self.remainingProviders:
+                self.remainingProviders.remove('aniwave')
 
-        # if control.getBool('provider.gogo'):
-        #     t = threading.Thread(target=self.gogo_worker, args=(mal_id, episode, rescrape))
-        #     t.start()
-        #     self.threads.append(t)
-        # else:
-        #     self.remainingProviders.remove('gogo')
-
-        if control.getBool('provider.hianime'):
+        if not debrid_priority and control.getBool('provider.hianime'):
             t = threading.Thread(target=self.hianime_worker, args=(mal_id, episode, rescrape))
             t.start()
             self.threads.append(t)
         else:
-            self.remainingProviders.remove('hianime')
+            if 'hianime' in self.remainingProviders:
+                self.remainingProviders.remove('hianime')
 
-        if control.getBool('provider.watchnixtoons2'):
+        if not debrid_priority and control.getBool('provider.watchnixtoons2'):
             t = threading.Thread(target=self.watchnixtoons2_worker, args=(mal_id, episode, media_type, rescrape))
             t.start()
             self.threads.append(t)
         else:
-            self.remainingProviders.remove('watchnixtoons2')
+            if 'watchnixtoons2' in self.remainingProviders:
+                self.remainingProviders.remove('watchnixtoons2')
 
         timeout = 60 if rescrape else control.getInt('general.timeout')
         start_time = time.perf_counter()
@@ -192,11 +199,17 @@ class Sources(GetSources):
                 or not self.remainingProviders
                 or (control.getBool('general.terminate.oncloud') and len(self.cloud_files) > 0)
                 or (control.getBool('general.terminate.onlocal') and len(self.local_files) > 0)
+                or (debrid_priority and (len(self.torrentCacheSources) > 0 or len(self.cloud_files) > 0))
             ):
                 break
 
             runtime = time.perf_counter() - start_time
             self.progress = runtime / timeout * 100
+
+        # Debrid Priority Mode: Fall back to embeds if no cached sources found
+        if debrid_priority and len(self.torrentCacheSources) == 0 and len(self.cloud_files) == 0:
+            control.log('Debrid Priority: No cached sources, falling back to embeds', 'info')
+            self._scrape_embeds_fallback(mal_id, episode, media_type, rescrape)
 
         if len(self.torrentSources) + len(self.embedSources) + len(self.cloud_files) + len(self.local_files) == 0:
             self.return_data = []
@@ -309,6 +322,39 @@ class Sources(GetSources):
         season = episode_data.get('season') if episode_data else None
         self.cloud_files += debrid_cloudfiles.Sources().get_sources(query, mal_id, episode, season)
         self.remainingProviders.remove('Cloud Inspection')
+
+    def _scrape_embeds_fallback(self, mal_id, episode, media_type, rescrape):
+        """Fallback to scrape embeds when no cached debrid sources found in priority mode"""
+        embed_threads = []
+
+        if control.getBool('provider.animepahe'):
+            t = threading.Thread(target=self.animepahe_worker, args=(mal_id, episode, rescrape))
+            t.start()
+            embed_threads.append(t)
+
+        if control.getBool('provider.animix'):
+            t = threading.Thread(target=self.animix_worker, args=(mal_id, episode, rescrape))
+            t.start()
+            embed_threads.append(t)
+
+        if control.getBool('provider.aniwave'):
+            t = threading.Thread(target=self.aniwave_worker, args=(mal_id, episode, rescrape))
+            t.start()
+            embed_threads.append(t)
+
+        if control.getBool('provider.hianime'):
+            t = threading.Thread(target=self.hianime_worker, args=(mal_id, episode, rescrape))
+            t.start()
+            embed_threads.append(t)
+
+        if control.getBool('provider.watchnixtoons2'):
+            t = threading.Thread(target=self.watchnixtoons2_worker, args=(mal_id, episode, media_type, rescrape))
+            t.start()
+            embed_threads.append(t)
+
+        # Wait for embeds with timeout
+        for t in embed_threads:
+            t.join(timeout=15)
 
     @staticmethod
     def sortSources(torrent_list, embed_list, cloud_files, local_files, media_type, duration):

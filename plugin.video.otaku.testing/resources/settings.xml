@@ -941,6 +941,11 @@
 					<default>false</default>
 					<control type="toggle"/>
 				</setting>
+				<setting id="general.debrid.priority" type="boolean" label="Debrid Priority Mode" help="Skip embed sources when debrid is enabled for faster autoplay. Falls back to embeds if no cached sources.">
+					<level>0</level>
+					<default>true</default>
+					<control type="toggle"/>
+				</setting>
 			</group>
 
 			<!-- Torrent Scraping -->

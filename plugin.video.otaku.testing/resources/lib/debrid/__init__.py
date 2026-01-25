@@ -23,6 +23,8 @@ class Debrid:
 
     def torrentCacheCheck(self, torrent_list):
         enabled_debrids = control.enabled_debrid()
+
+        # Check all enabled debrid providers
         if enabled_debrids['realdebrid']:
             t = threading.Thread(target=self.real_debrid_worker, args=(deepcopy(torrent_list),))
             t.start()
