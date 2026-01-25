@@ -184,9 +184,9 @@
             <label>[B]$INFO[Container(1000).ListItem.Property(rating)][/B]</label>
         </control>
         <control type="label">
-            <left>245</left>
+            <left>237</left>
             <top>250</top>
-            <width>70</width>
+            <width>86</width>
             <height>16</height>
             <font>font10</font>
             <textcolor>88FFFFFF</textcolor>
