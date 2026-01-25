@@ -510,15 +510,18 @@ class WatchlistPlayer(player):
             elif isinstance(preffeded_subtitle_keyword, str):
                 preffeded_subtitle_keyword = preffeded_subtitle_keyword.lower()
 
+            # Log available subtitle streams for debugging
+            control.log(f'Available subtitle streams: {[(s.get("index"), s.get("language"), s.get("name")) for s in subtitle_streams]}', 'info')
+
             # Type and Keyword filtering
             if control.getBool('general.subtitles.keyword') or control.getBool('general.subtitles.type'):
-                for index, sub in enumerate(subtitle_streams):
+                for sub in subtitle_streams:
 
                     # Check for type match
                     if control.getBool('general.subtitles.type'):
                         if sub['language'] == preferred_subtitle_lang:
                             if sub[preffeded_subtitle_type]:
-                                subtitle_int = index
+                                subtitle_int = sub['index']
                                 break
 
                     # Check for keyword match
@@ -527,34 +530,34 @@ class WatchlistPlayer(player):
                             sub_name_lower = sub['name'].lower()
                             if isinstance(preffeded_subtitle_keyword, list):
                                 if any(kw in sub_name_lower for kw in preffeded_subtitle_keyword):
-                                    subtitle_int = index
+                                    subtitle_int = sub['index']
                                     break
                             elif preffeded_subtitle_keyword and preffeded_subtitle_keyword in sub_name_lower:
-                                subtitle_int = index
+                                subtitle_int = sub['index']
                                 break
 
                 # fallback to first of preferred language if no type or keyword match
                 if subtitle_int is None:
-                    for index, sub in enumerate(subtitle_streams):
+                    for sub in subtitle_streams:
                         if sub['language'] == preferred_subtitle_lang:
-                            subtitle_int = index
+                            subtitle_int = sub['index']
                             break
             else:
                 # No type filter or keyword filter, just check for preferred language
-                for index, sub in enumerate(subtitle_streams):
+                for sub in subtitle_streams:
                     if sub['language'] == preferred_subtitle_lang:
-                        subtitle_int = index
+                        subtitle_int = sub['index']
                         break
 
             if subtitle_int is None:
                 # default-subtitle fallback
-                for index, sub in enumerate(subtitle_streams):
+                for sub in subtitle_streams:
                     if sub.get('isdefault', False):
-                        subtitle_int = index
+                        subtitle_int = sub['index']
                         break
                 else:
                     # If no default subtitle stream is found, set to the first available subtitle stream
-                    subtitle_int = 0
+                    subtitle_int = subtitle_streams[0]['index'] if subtitle_streams else None
 
             if subtitle_int is not None:
                 control.log(f'Setting subtitle stream to index {subtitle_int}', 'info')
