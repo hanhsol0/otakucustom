@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
-<addon id="plugin.video.otaku.testing" name="Otaku Testing" provider-name="TeamOtaku" version="5.2.86">
+<addon id="plugin.video.otaku.testing" name="Otaku Testing" provider-name="TeamOtaku" version="5.2.87">
   <requires>
     <import addon="xbmc.python" version="3.0.1"/>
+    <import addon="script.module.requests"/>
     <import addon="script.module.beautifulsoup4"/>
     <import addon="script.module.inputstreamhelper"/>
     <import addon="context.otaku.testing" version="1.0.31"/>
