@@ -513,6 +513,22 @@ class WatchlistPlayer(player):
             # Log available subtitle streams for debugging
             control.log(f'Available subtitle streams: {[(s.get("index"), s.get("language"), s.get("name")) for s in subtitle_streams]}', 'info')
 
+            # Helper to detect signs/songs only subs
+            import re
+            signs_only_pattern = re.compile(
+                r'[\(\[]?\s*(signs?|songs?|s&s|signs?\s*[/&]\s*songs?)\s*[\)\]]?'
+                r'|signs?\s+only|songs?\s+only',
+                re.IGNORECASE
+            )
+
+            def is_signs_only(name):
+                """Check if subtitle is signs/songs only (not full dialogue)"""
+                if not name:
+                    return False
+                if re.search(r'dialogue|full', name, re.IGNORECASE):
+                    return False
+                return bool(signs_only_pattern.search(name))
+
             # Type and Keyword filtering
             if control.getBool('general.subtitles.keyword') or control.getBool('general.subtitles.type'):
                 for sub in subtitle_streams:
@@ -537,31 +553,23 @@ class WatchlistPlayer(player):
                                 break
 
                 # fallback to first of preferred language if no type or keyword match
+                # Skip signs-only subs
                 if subtitle_int is None:
                     for sub in subtitle_streams:
                         if sub['language'] == preferred_subtitle_lang:
-                            subtitle_int = sub['index']
-                            break
+                            if not is_signs_only(sub.get('name', '')):
+                                subtitle_int = sub['index']
+                                control.log(f'Selected full dialogue sub: {sub.get("name")}', 'info')
+                                break
+                    # Final fallback - any matching language
+                    if subtitle_int is None:
+                        for sub in subtitle_streams:
+                            if sub['language'] == preferred_subtitle_lang:
+                                subtitle_int = sub['index']
+                                control.log(f'Fallback to sub: {sub.get("name")}', 'info')
+                                break
             else:
                 # No type filter or keyword filter - prefer full dialogue subs over signs/songs
-                import re
-                # Match patterns like (Signs), [Signs], Signs Only, Signs/Songs, S&S, etc.
-                signs_only_pattern = re.compile(
-                    r'[\(\[]?\s*(signs?|songs?|s&s|signs?\s*[/&]\s*songs?)\s*[\)\]]?'
-                    r'|signs?\s+only|songs?\s+only',
-                    re.IGNORECASE
-                )
-
-                def is_signs_only(name):
-                    """Check if subtitle is signs/songs only (not full dialogue)"""
-                    if not name:
-                        return False
-                    # If it has "dialogue" or "full", it's not signs-only
-                    if re.search(r'dialogue|full', name, re.IGNORECASE):
-                        return False
-                    # Check for signs/songs patterns
-                    return bool(signs_only_pattern.search(name))
-
                 # First pass: find preferred language, skip signs-only subs
                 for sub in subtitle_streams:
                     if sub['language'] == preferred_subtitle_lang:
