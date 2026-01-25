@@ -533,24 +533,34 @@ class WatchlistPlayer(player):
             control.log(f'Keyword filter: {control.getBool("general.subtitles.keyword")}, Type filter: {control.getBool("general.subtitles.type")}, Keyword: {preffeded_subtitle_keyword}', 'info')
             if control.getBool('general.subtitles.keyword') or control.getBool('general.subtitles.type'):
                 for sub in subtitle_streams:
+                    sub_name = sub.get('name', '')
+
+                    # Skip signs-only subs in type/keyword matching (unless explicitly looking for signs)
+                    if is_signs_only(sub_name):
+                        looking_for_signs = isinstance(preffeded_subtitle_keyword, list) and any(kw in ['signs', 'songs'] for kw in preffeded_subtitle_keyword)
+                        if not looking_for_signs:
+                            continue
 
                     # Check for type match
                     if control.getBool('general.subtitles.type'):
                         if sub['language'] == preferred_subtitle_lang:
                             if sub[preffeded_subtitle_type]:
                                 subtitle_int = sub['index']
+                                control.log(f'Type matched: {sub_name}', 'info')
                                 break
 
                     # Check for keyword match
                     if control.getBool('general.subtitles.keyword'):
                         if sub['language'] == preferred_subtitle_lang:
-                            sub_name_lower = sub['name'].lower()
+                            sub_name_lower = sub_name.lower()
                             if isinstance(preffeded_subtitle_keyword, list):
                                 if any(kw in sub_name_lower for kw in preffeded_subtitle_keyword):
                                     subtitle_int = sub['index']
+                                    control.log(f'Keyword matched: {sub_name}', 'info')
                                     break
                             elif preffeded_subtitle_keyword and preffeded_subtitle_keyword in sub_name_lower:
                                 subtitle_int = sub['index']
+                                control.log(f'Keyword matched: {sub_name}', 'info')
                                 break
 
                 # fallback to first of preferred language if no type or keyword match
