@@ -103,6 +103,7 @@ class Sources(GetSources):
         ]
 
         if any(enabled_debrids.values()):
+            control.log(f"Torrent search query: '{query}' for mal_id={mal_id}, episode={episode}", 'info')
             if control.getBool('provider.nyaa'):
                 t = threading.Thread(target=self.nyaa_worker, args=(query, mal_id, episode, status, media_type, rescrape))
                 t.start()
