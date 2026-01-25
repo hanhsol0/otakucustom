@@ -478,7 +478,7 @@ class WatchlistPlayer(player):
 
             # If no subtitle streams but we have audio, try external subs
             if not subtitle_streams and audio_streams:
-                control.log('No embedded subtitles found - fetching from OpenSubtitles')
+                control.log('No embedded subtitles found - fetching from OpenSubtitles', 'info')
                 self._fetch_external_subtitles()
 
             preferred_audio_streams = audios[self.preferred_audio]
