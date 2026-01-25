@@ -284,6 +284,8 @@ class WatchlistPlayer(player):
         intro_start = self.skipintro_start if self.skipintro_aniskip else control.getInt('skipintro.delay') or 1
         intro_end = self.skipintro_end if self.skipintro_aniskip else intro_start + (control.getInt('skipintro.duration') * 60)
 
+        control.log(f'Intro monitoring: aniskip={self.skipintro_aniskip}, start={intro_start}, end={intro_end}', 'info')
+
         if not self.skipintro_aniskip:
             control.log('Using default intro skip times - no aniskip data found')
 
@@ -291,6 +293,7 @@ class WatchlistPlayer(player):
         while self.isPlaying():
             self.current_time = int(self.getTime())
             if self.current_time > intro_end:
+                control.log(f'Past intro end ({self.current_time} > {intro_end}), stopping intro monitor', 'info')
                 break
             elif self.current_time > intro_start:
                 # Auto skip ONLY if enabled AND we have aniskip data
