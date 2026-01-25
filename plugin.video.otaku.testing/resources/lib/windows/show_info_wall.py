@@ -27,6 +27,10 @@ def _format_items_for_wall(items):
             fanart = item.get('fanart') or poster
             banner = item.get('banner') or poster
 
+        # Debug: log first item's full info
+        if idx == 0:
+            control.log(f"[INFO_WALL] First item info: {info}", "info")
+
         # Get genres - can be list of strings or list of dicts with 'name' key
         genres = info.get('genre', [])
         if genres and isinstance(genres[0], dict):

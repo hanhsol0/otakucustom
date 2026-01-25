@@ -496,28 +496,28 @@
                 <itemlayout height="470" width="400">
                     <!-- Poster shadow -->
                     <control type="image">
-                        <left>12</left>
+                        <left>72</left>
                         <top>12</top>
-                        <width>376</width>
-                        <height>390</height>
+                        <width>256</width>
+                        <height>386</height>
                         <texture>white.png</texture>
                         <colordiffuse>33FFFFFF</colordiffuse>
                     </control>
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>10</left>
+                        <left>70</left>
                         <top>10</top>
-                        <width>380</width>
-                        <height>394</height>
+                        <width>260</width>
+                        <height>390</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
-                        <aspectratio>keep</aspectratio>
+                        <aspectratio>scale</aspectratio>
                     </control>
 
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>320</left>
+                        <left>260</left>
                         <top>18</top>
                         <width>60</width>
                         <height>24</height>
@@ -526,7 +526,7 @@
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>320</left>
+                        <left>260</left>
                         <top>18</top>
                         <width>60</width>
                         <height>24</height>
@@ -566,28 +566,28 @@
                 <focusedlayout height="470" width="400">
                     <!-- Glow effect -->
                     <control type="image">
-                        <left>0</left>
+                        <left>60</left>
                         <top>0</top>
-                        <width>400</width>
-                        <height>414</height>
+                        <width>280</width>
+                        <height>410</height>
                         <texture>white.png</texture>
                         <colordiffuse>FF4da6ff</colordiffuse>
                     </control>
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>10</left>
+                        <left>70</left>
                         <top>10</top>
-                        <width>380</width>
-                        <height>394</height>
+                        <width>260</width>
+                        <height>390</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
-                        <aspectratio>keep</aspectratio>
+                        <aspectratio>scale</aspectratio>
                     </control>
 
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>320</left>
+                        <left>260</left>
                         <top>18</top>
                         <width>60</width>
                         <height>24</height>
@@ -596,7 +596,7 @@
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>320</left>
+                        <left>260</left>
                         <top>18</top>
                         <width>60</width>
                         <height>24</height>
