@@ -21,7 +21,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     # Skip if commit is from the bot (prevents infinite loop)
-    if: "!contains(github.event.head_commit.message, 'Auto-release')"
+    if: "!contains(github.event.head_commit.message, 'Auto-build')"
 
     steps:
       - name: Checkout
@@ -35,23 +35,12 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Bump version
+      - name: Get version
         run: |
-          # Extract current version
-          CURRENT=$(grep -oP 'id="plugin.video.otaku.testing".*?version="\K[0-9]+\.[0-9]+\.[0-9]+' plugin.video.otaku.testing/addon.xml)
-          echo "Current version: $CURRENT"
-
-          # Bump patch version
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          echo "New version: $NEW_VERSION"
-
-          # Update addon.xml
-          sed -i "s/version=\"$CURRENT\"/version=\"$NEW_VERSION\"/" plugin.video.otaku.testing/addon.xml
-
-          # Export for later steps
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          # Extract current version (already bumped by pre-commit hook)
+          VERSION=$(grep -oP 'id="plugin.video.otaku.testing".*?version="\K[0-9]+\.[0-9]+\.[0-9]+' plugin.video.otaku.testing/addon.xml)
+          echo "Version: $VERSION"
+          echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build repository
         run: python build_repo.py
@@ -61,7 +50,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Auto-release v${{ env.NEW_VERSION }}"
+          git commit -m "Auto-build v${{ env.NEW_VERSION }}"
 
           # Retry push with rebase if it fails (handles concurrent pushes)
           for i in 1 2 3; do
