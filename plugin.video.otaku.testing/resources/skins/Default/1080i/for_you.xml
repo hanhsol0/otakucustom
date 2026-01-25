@@ -134,59 +134,127 @@
                 <label>$INFO[Container(1000).ListItem.Property(genres)]</label>
             </control>
 
-            <!-- Rating Section -->
+            <!-- Ratings Row -->
             <control type="group">
                 <left>255</left>
                 <top>115</top>
                 <width>310</width>
-                <height>90</height>
+                <height>100</height>
 
-                <!-- AniList Score - Large -->
+                <!-- AniList Score -->
                 <control type="group">
                     <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating))</visible>
                     <left>0</left>
                     <top>0</top>
-                    <width>120</width>
-                    <height>55</height>
+                    <width>70</width>
+                    <height>60</height>
 
                     <control type="image">
                         <left>0</left>
                         <top>0</top>
-                        <width>65</width>
-                        <height>45</height>
+                        <width>55</width>
+                        <height>42</height>
                         <texture>white.png</texture>
                         <colordiffuse>FF4da6ff</colordiffuse>
                     </control>
                     <control type="label">
                         <left>0</left>
                         <top>0</top>
-                        <width>65</width>
-                        <height>45</height>
-                        <font>font16</font>
+                        <width>55</width>
+                        <height>42</height>
+                        <font>font14</font>
                         <textcolor>FFFFFFFF</textcolor>
                         <align>center</align>
                         <aligny>center</aligny>
                         <label>[B]$INFO[Container(1000).ListItem.Property(rating)][/B]</label>
                     </control>
                     <control type="label">
-                        <left>75</left>
-                        <top>5</top>
-                        <width>150</width>
-                        <height>18</height>
+                        <left>0</left>
+                        <top>44</top>
+                        <width>55</width>
+                        <height>16</height>
                         <font>font10</font>
-                        <textcolor>AAFFFFFF</textcolor>
-                        <align>left</align>
-                        <label>AniList Score</label>
+                        <textcolor>88FFFFFF</textcolor>
+                        <align>center</align>
+                        <label>AniList</label>
+                    </control>
+                </control>
+
+                <!-- MAL Score -->
+                <control type="group">
+                    <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_mal))</visible>
+                    <left>65</left>
+                    <top>0</top>
+                    <width>70</width>
+                    <height>60</height>
+
+                    <control type="image">
+                        <left>0</left>
+                        <top>0</top>
+                        <width>55</width>
+                        <height>42</height>
+                        <texture>white.png</texture>
+                        <colordiffuse>FF2E51A2</colordiffuse>
                     </control>
                     <control type="label">
-                        <left>75</left>
-                        <top>24</top>
-                        <width>150</width>
-                        <height>18</height>
+                        <left>0</left>
+                        <top>0</top>
+                        <width>55</width>
+                        <height>42</height>
+                        <font>font14</font>
+                        <textcolor>FFFFFFFF</textcolor>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>[B]$INFO[Container(1000).ListItem.Property(rating_mal)][/B]</label>
+                    </control>
+                    <control type="label">
+                        <left>0</left>
+                        <top>44</top>
+                        <width>55</width>
+                        <height>16</height>
                         <font>font10</font>
-                        <textcolor>66FFFFFF</textcolor>
-                        <align>left</align>
-                        <label>out of 100</label>
+                        <textcolor>88FFFFFF</textcolor>
+                        <align>center</align>
+                        <label>MAL</label>
+                    </control>
+                </control>
+
+                <!-- IMDB Score -->
+                <control type="group">
+                    <visible>!String.IsEmpty(Container(1000).ListItem.Property(rating_imdb))</visible>
+                    <left>130</left>
+                    <top>0</top>
+                    <width>70</width>
+                    <height>60</height>
+
+                    <control type="image">
+                        <left>0</left>
+                        <top>0</top>
+                        <width>55</width>
+                        <height>42</height>
+                        <texture>white.png</texture>
+                        <colordiffuse>FFF5C518</colordiffuse>
+                    </control>
+                    <control type="label">
+                        <left>0</left>
+                        <top>0</top>
+                        <width>55</width>
+                        <height>42</height>
+                        <font>font14</font>
+                        <textcolor>FF000000</textcolor>
+                        <align>center</align>
+                        <aligny>center</aligny>
+                        <label>[B]$INFO[Container(1000).ListItem.Property(rating_imdb)][/B]</label>
+                    </control>
+                    <control type="label">
+                        <left>0</left>
+                        <top>44</top>
+                        <width>55</width>
+                        <height>16</height>
+                        <font>font10</font>
+                        <textcolor>88FFFFFF</textcolor>
+                        <align>center</align>
+                        <label>IMDB</label>
                     </control>
                 </control>
 
@@ -194,7 +262,7 @@
                 <control type="label">
                     <visible>!String.IsEmpty(Container(1000).ListItem.Property(rec_count))</visible>
                     <left>0</left>
-                    <top>55</top>
+                    <top>68</top>
                     <width>310</width>
                     <height>20</height>
                     <font>font10</font>

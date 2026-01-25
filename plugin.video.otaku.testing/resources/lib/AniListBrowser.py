@@ -1619,6 +1619,16 @@ class AniListBrowser(BrowserBase):
         # Collect metadata
         get_meta.collect_meta(filtered)
 
+        # Batch fetch MDBList ratings for all MAL IDs
+        mal_ids = [r.get('idMal') for r in filtered if r.get('idMal')]
+        ratings_map = {}
+        if mal_ids:
+            try:
+                from resources.lib.endpoints import mdblist
+                ratings_map = mdblist.get_ratings_for_mal_ids(mal_ids)
+            except Exception:
+                pass
+
         # Format for window display
         window_items = []
         for res in filtered:
@@ -1643,13 +1653,14 @@ class AniListBrowser(BrowserBase):
                 desc = desc.replace('<b>', '[B]').replace('</b>', '[/B]')
                 desc = desc.replace('<br>', '[CR]').replace('\n', '')
 
-            # Get MAL score - convert AniList 100-scale to 10-scale
-            rating_mal = ''
-            if res.get('meanScore'):
-                rating_mal = str(round(res.get('meanScore', 0) / 10, 1))
+            # Get ratings from MDBList
+            mdblist_ratings = ratings_map.get(mal_id, {})
+            rating_mal = mdblist_ratings.get('mal', 0.0)
+            rating_imdb = mdblist_ratings.get('imdb', 0.0)
 
-            # IMDB score from kodi_meta if available
-            rating_imdb = kodi_meta.get('rating_imdb', '') if kodi_meta else ''
+            # Convert 0 or 0.0 to empty string for display
+            rating_mal = '' if rating_mal in (0, 0.0) else str(rating_mal)
+            rating_imdb = '' if rating_imdb in (0, 0.0) else str(rating_imdb)
 
             # Build window item
             item = {
