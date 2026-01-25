@@ -1852,3 +1852,11 @@ msgstr ""
 msgctxt "#30454"
 msgid "Get free API key from opensubtitles.com"
 msgstr ""
+
+msgctxt "#30455"
+msgid "Debrid Priority Mode"
+msgstr ""
+
+msgctxt "#30456"
+msgid "Skip embed sources when debrid is enabled for faster autoplay. Falls back to embeds if no cached sources."
+msgstr ""

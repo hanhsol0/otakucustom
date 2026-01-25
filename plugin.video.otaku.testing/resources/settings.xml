@@ -1076,7 +1076,7 @@
 					</dependencies>
 					<control type="spinner" format="string"/>
 				</setting>
-				<setting id="general.debrid.priority" type="boolean" label="Debrid Priority Mode" help="Skip embed sources when debrid is enabled for faster autoplay. Falls back to embeds if no cached sources.">
+				<setting id="general.debrid.priority" type="boolean" label="30455" help="30456">
 					<level>0</level>
 					<default>true</default>
 					<control type="toggle"/>
