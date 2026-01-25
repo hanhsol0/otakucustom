@@ -567,11 +567,13 @@ class WatchlistPlayer(player):
     def process_aniskip(self):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
             skipintro_aniskip_res = aniskip.get_skip_times(self.mal_id, self.episode, 'op')
+            control.log(f'process_aniskip: mal_id={self.mal_id}, episode={self.episode}, result={skipintro_aniskip_res is not None}', 'info')
             if skipintro_aniskip_res:
                 skip_times = skipintro_aniskip_res['results'][0]['interval']
                 self.skipintro_start = int(skip_times['startTime']) + self.skipintro_offset
                 self.skipintro_end = int(skip_times['endTime']) + self.skipintro_offset
                 self.skipintro_aniskip = True
+                control.log(f'AniSkip intro times: {self.skipintro_start}-{self.skipintro_end}', 'info')
 
         if self.skipoutro_aniskip_enable and not self.skipoutro_aniskip:
             skipoutro_aniskip_res = aniskip.get_skip_times(self.mal_id, self.episode, 'ed')
@@ -616,6 +618,7 @@ class WatchlistPlayer(player):
     def process_embed(self, embed):
         if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
             embed_skipintro_start = control.getInt(f'{embed}.skipintro.start')
+            control.log(f'process_embed({embed}): skipintro_start={embed_skipintro_start}', 'info')
             if embed_skipintro_start != -1:
                 self.skipintro_start = embed_skipintro_start + self.skipintro_offset
                 self.skipintro_end = control.getInt(f'{embed}.skipintro.end') + self.skipintro_offset
