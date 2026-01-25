@@ -15,10 +15,9 @@ def _format_items_for_wall(items):
         # Get poster from multiple possible sources
         poster = item.get('poster') or item.get('image') or ''
 
-        # Debug: log first item's structure and poster
-        if idx == 0:
-            control.log(f"[INFO_WALL] First item keys: {list(item.keys())}", "info")
-            control.log(f"[INFO_WALL] First item poster type: {type(poster)}, value: {poster[:100] if isinstance(poster, str) else poster}", "info")
+        # Handle case where image is a dict containing poster/icon/thumb URLs
+        if isinstance(poster, dict):
+            poster = poster.get('poster') or poster.get('icon') or poster.get('thumb') or ''
 
         # Debug: log if poster is missing
         if not poster:
