@@ -470,7 +470,7 @@ def bulk_draw_items(video_data):
     return xbmcplugin.addDirectoryItems(HANDLE, list_items)
 
 
-def draw_items(video_data, content_type=''):
+def draw_items(video_data, content_type='', view_mode=None):
     # Widget rate limiting - detect if this is a widget request
     is_widget = xbmc.getInfoLabel('Container.PluginName') != ADDON_ID
 
@@ -495,7 +495,10 @@ def draw_items(video_data, content_type=''):
             if xbmc.getCondVisibility("Container.HasFiles"):
                 break
             xbmc.sleep(100)
-    if getBool('interface.viewtype'):
+    # Override view mode if specified
+    if view_mode is not None:
+        xbmc.executebuiltin('Container.SetViewMode(%d)' % view_mode)
+    elif getBool('interface.viewtype'):
         if getBool('interface.viewidswitch'):
             # Use integer view types
             if content_type == '' or content_type == 'addons':

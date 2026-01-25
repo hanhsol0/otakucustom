@@ -221,7 +221,7 @@ def FIND_RECOMMENDATIONS(payload, params):
 @Route('for_you')
 def FOR_YOU(payload, params):
     page = int(params.get('page', 1))
-    control.draw_items(BROWSER.get_for_you(page), 'tvshows')
+    control.draw_items(BROWSER.get_for_you(page), 'tvshows', view_mode=500)  # Wall view
 
 
 @Route('dismiss_recommendation/*')
