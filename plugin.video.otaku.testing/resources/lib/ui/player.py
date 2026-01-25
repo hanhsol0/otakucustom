@@ -403,34 +403,30 @@ class WatchlistPlayer(player):
             preffeded_subtitle_type = types[self.preferred_subtitle_type]
             preffeded_subtitle_keyword = keywords[self.preferred_subtitle_keyword]
 
-            # Get current audio stream to avoid unnecessary switching
-            current_audio_stream = None
-            try:
-                current_audio_stream = self.getAudioStream()
-            except:
-                pass
-
-            # Set preferred audio stream (only if different from current)
+            # Find target audio stream
             target_audio_index = None
             for stream in audio_streams:
                 if stream['language'] == preferred_audio_streams:
                     target_audio_index = stream['index']
                     break
-            else:
-                # If no preferred audio stream is found, set to the default audio stream
+
+            # If preferred not found, check if default or first stream matches what we'd select anyway
+            if target_audio_index is None:
                 for stream in audio_streams:
                     if stream.get('isdefault', False):
                         target_audio_index = stream['index']
                         break
                 else:
-                    # If no default audio stream is found, set to the first available audio stream
-                    target_audio_index = audio_streams[0]['index']
+                    target_audio_index = audio_streams[0]['index'] if audio_streams else None
 
-            if target_audio_index is not None and target_audio_index != current_audio_stream:
+            # Only switch if we found a preferred language stream (not just falling back to default/first)
+            # This avoids restarting audio when there's no benefit
+            preferred_found = any(s['language'] == preferred_audio_streams for s in audio_streams)
+            if preferred_found and target_audio_index is not None:
                 self.setAudioStream(target_audio_index)
-                control.log(f'Audio stream changed from {current_audio_stream} to {target_audio_index}', 'info')
+                control.log(f'Audio stream set to {target_audio_index} ({preferred_audio_streams})', 'info')
             else:
-                control.log(f'Audio stream already set to {current_audio_stream}, skipping', 'info')
+                control.log(f'No preferred audio ({preferred_audio_streams}) found, keeping default', 'info')
 
             # Set preferred subtitle stream
             subtitle_int = None
