@@ -1570,7 +1570,7 @@ class MalBrowser(BrowserBase):
             start_date = res['aired']['from']
             info['premiered'] = start_date[:10]
             info['year'] = res.get('year', int(start_date[:3]))
-        except TypeError:
+        except (TypeError, KeyError):
             pass
 
         if isinstance(res.get('score'), float):
