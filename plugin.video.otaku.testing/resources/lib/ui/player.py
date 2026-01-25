@@ -401,6 +401,8 @@ class WatchlistPlayer(player):
                 except Exception:
                     video_url = self.path
 
+                control.log(f'OpenSubtitles: Searching for title="{title}" episode={episode} lang={preferred_lang}', 'info')
+
                 success = opensubtitles.fetch_and_apply_subtitle(
                     player=self,
                     title=title,
