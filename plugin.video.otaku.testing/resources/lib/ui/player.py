@@ -54,7 +54,7 @@ class WatchlistPlayer(player):
         self.preferred_subtitle_type = control.getInt('subtitles.types')
         self.preferred_subtitle_keyword = control.getInt('subtitles.keywords')
 
-    def handle_player(self, mal_id, watchlist_update, episode, resume, path, type, provider, context):
+    def handle_player(self, mal_id, watchlist_update, episode, resume, path, type, provider, context, source_skip_data=None):
         self.mal_id = mal_id
         self._watchlist_update = watchlist_update
         self.episode = episode
@@ -64,6 +64,7 @@ class WatchlistPlayer(player):
         self.type = type
         self.provider = provider
         self.context = context
+        self.source_skip_data = source_skip_data or {}
 
         # Process skip times asynchronously to not block playback
         if not self._skip_processed:
@@ -76,8 +77,16 @@ class WatchlistPlayer(player):
         """Process skip times in background to avoid blocking playback"""
         def _process():
             try:
-                self.process_embed('aniwave')
-                self.process_embed('hianime')
+                # Process source-specific skip data FIRST (highest priority for embed sources)
+                self.process_source_skip_data()
+
+                # Only fall back to global embed settings if no source skip data found
+                if not self.skipintro_aniskip:
+                    self.process_embed('aniwave')
+                if not self.skipintro_aniskip:
+                    self.process_embed('hianime')
+
+                # AniSkip APIs as fallback for torrents or missing embed data
                 self.process_aniskip()
                 self.process_animeskip()
                 self._skip_processed = True
@@ -86,6 +95,29 @@ class WatchlistPlayer(player):
 
         import threading
         threading.Thread(target=_process, daemon=True).start()
+
+    def process_source_skip_data(self):
+        """Process skip data directly from the selected source (highest priority for embeds)"""
+        if not self.source_skip_data:
+            return
+
+        control.log(f'process_source_skip_data: {self.source_skip_data}', 'debug')
+
+        if self.skipintro_aniskip_enable and not self.skipintro_aniskip:
+            intro = self.source_skip_data.get('intro', {})
+            if intro and intro.get('start', 0) != 0:
+                self.skipintro_start = int(intro['start']) + self.skipintro_offset
+                self.skipintro_end = int(intro['end']) + self.skipintro_offset
+                self.skipintro_aniskip = True
+                control.log(f'Source skip intro set: {self.skipintro_start}-{self.skipintro_end}', 'debug')
+
+        if self.skipoutro_aniskip_enable and not self.skipoutro_aniskip:
+            outro = self.source_skip_data.get('outro', {})
+            if outro and outro.get('start', 0) != 0:
+                self.skipoutro_start = int(outro['start']) + self.skipoutro_offset
+                self.skipoutro_end = int(outro['end']) + self.skipoutro_offset
+                self.skipoutro_aniskip = True
+                control.log(f'Source skip outro set: {self.skipoutro_start}-{self.skipoutro_end}', 'debug')
 
     def onPlayBackStopped(self):
         control.closeAllDialogs()
@@ -266,7 +298,7 @@ class WatchlistPlayer(player):
             del self._monitor
 
     def _handle_skip_intro(self):
-        """Handle skip intro functionality with fallbacks - optimized"""
+        """Handle skip intro functionality - only when real skip data exists"""
         control.log(f'_handle_skip_intro: skipintrodialog={control.getBool("smartplay.skipintrodialog")}, auto={self.skipintro_aniskip_auto}', 'debug')
         # Only proceed if skip intro dialog is enabled OR auto-skip is enabled
         if not (control.getBool('smartplay.skipintrodialog') or self.skipintro_aniskip_auto):
@@ -279,11 +311,15 @@ class WatchlistPlayer(player):
             timeout -= 1
 
         if not self._skip_processed:
-            control.log('Skip times processing timed out - using default times', 'warning')
+            control.log('Skip times processing timed out', 'warning')
 
-        # Determine intro times and whether we have aniskip data
-        intro_start = self.skipintro_start if self.skipintro_aniskip else control.getInt('skipintro.delay') or 1
-        intro_end = self.skipintro_end if self.skipintro_aniskip else intro_start + (control.getInt('skipintro.duration') * 60)
+        # Only proceed if we have real skip data - don't use user defaults
+        if not self.skipintro_aniskip:
+            control.log('No skip intro data found, skipping intro dialog', 'debug')
+            return
+
+        intro_start = self.skipintro_start
+        intro_end = self.skipintro_end
 
         control.log(f'Intro monitoring: aniskip={self.skipintro_aniskip}, start={intro_start}, end={intro_end}', 'debug')
 
@@ -293,12 +329,12 @@ class WatchlistPlayer(player):
             if self.current_time > intro_end:
                 break
             elif self.current_time > intro_start:
-                # Auto skip ONLY if enabled AND we have aniskip data
-                if self.skipintro_aniskip_auto and self.skipintro_aniskip:
+                # Auto skip if enabled
+                if self.skipintro_aniskip_auto:
                     self.seekTime(intro_end)
                     control.log(f'Auto-skipped intro: {intro_start}-{intro_end}', 'debug')
                 else:
-                    # Show skip intro dialog (works for both aniskip data and default times)
+                    # Show skip intro dialog
                     PlayerDialogs().show_skip_intro(self.skipintro_aniskip, intro_end)
                 break
             xbmc.sleep(2000)  # Check every 2 seconds

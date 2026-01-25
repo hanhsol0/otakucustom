@@ -282,7 +282,8 @@ class Resolver(BaseWindow):
                 self.params.get('path', ''),
                 self.return_data['source']['type'] if 'type' in self.return_data['source'] else '',
                 self.return_data['source']['provider'] if 'provider' in self.return_data['source'] else '',
-                self.context
+                self.context,
+                self.return_data['source'].get('skip', {})
             )
 
     def _build_art_dict(self, use_params=False):
