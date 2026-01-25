@@ -547,13 +547,15 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
                 # Check if significant words from anime title appear in torrent title
                 anime_words = set(anime_title.split())
                 title_words = set(title_clean_for_match.split())
-                # Require at least 2 words match or 60% of anime title words
+                # Require at least 1 word match or 50% of anime title words (relaxed for short titles)
                 common_words = anime_words & title_words
-                if len(common_words) >= 2 or (len(anime_words) > 0 and len(common_words) / len(anime_words) >= 0.6):
+                match_ratio = len(common_words) / len(anime_words) if len(anime_words) > 0 else 0
+                if len(common_words) >= 1 and match_ratio >= 0.5:
                     title_matches = True
                     break
             if not title_matches:
-                # Skip this torrent - title doesn't match anime
+                # Log filtered torrents for debugging
+                control.log(f"Title filter rejected: {title[:80]} (looking for: {anime_titles_clean[0] if anime_titles_clean else 'none'})", 'debug')
                 continue
 
         # Clean the title for extraction
