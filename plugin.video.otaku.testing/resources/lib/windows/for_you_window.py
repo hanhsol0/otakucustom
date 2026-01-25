@@ -218,6 +218,12 @@ class ForYouWindow(BaseWindow):
             payload = f"some_path/{anime_id}/0"
             params = {}
             WatchlistIntegration.RATE_ANIME(payload, params)
+            # Remove from current list since rated anime shouldn't appear in For You
+            self.all_items = [i for i in self.all_items if i.get('mal_id') != anime_id and i.get('id') != anime_id]
+            self._apply_filter()
+            # Clear the For You cache so it rebuilds without rated items
+            from resources.lib.ui import database
+            database.clear_for_you_cache()
 
     def handle_action(self, actionID):
         """Handle item selection - navigate to anime page."""

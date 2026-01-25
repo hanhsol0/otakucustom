@@ -3,7 +3,7 @@
 ║                         FOR YOU WINDOW - SPLIT LAYOUT                      ║
 ║                                                                           ║
 ║  Left: Large info panel (title, plot, ratings)                            ║
-║  Right: 3x2 poster grid with filter toggle above                          ║
+║  Right: 4x2 poster grid with filter toggle above                          ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 -->
 
@@ -476,7 +476,7 @@
             </control>
 
             <!-- ─────────────────────────────────────────────────────────── -->
-            <!-- POSTER GRID: 3 columns x 2 rows (6 posters per screen)       -->
+            <!-- POSTER GRID: 4 columns x 2 rows (8 posters per screen)       -->
             <!-- ─────────────────────────────────────────────────────────── -->
 
             <control type="panel" id="1000">
@@ -492,24 +492,24 @@
                 <scrolltime tween="sine" easing="out">200</scrolltime>
                 <pagecontrol>-</pagecontrol>
 
-                <!-- Unfocused poster with title below - 3 COLUMNS LAYOUT -->
-                <itemlayout height="470" width="400">
+                <!-- Unfocused poster with title below - 4 COLUMNS LAYOUT -->
+                <itemlayout height="470" width="320">
                     <!-- Poster shadow -->
                     <control type="image">
-                        <left>72</left>
+                        <left>52</left>
                         <top>12</top>
-                        <width>256</width>
-                        <height>386</height>
+                        <width>216</width>
+                        <height>326</height>
                         <texture>white.png</texture>
                         <colordiffuse>33FFFFFF</colordiffuse>
                     </control>
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>70</left>
+                        <left>50</left>
                         <top>10</top>
-                        <width>260</width>
-                        <height>390</height>
+                        <width>220</width>
+                        <height>330</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
                         <aspectratio>scale</aspectratio>
                     </control>
@@ -517,18 +517,18 @@
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>260</left>
+                        <left>195</left>
                         <top>18</top>
-                        <width>60</width>
+                        <width>65</width>
                         <height>24</height>
                         <texture>white.png</texture>
                         <colordiffuse>EEFF6B6B</colordiffuse>
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>260</left>
+                        <left>195</left>
                         <top>18</top>
-                        <width>60</width>
+                        <width>65</width>
                         <height>24</height>
                         <font>font10</font>
                         <textcolor>FFFFFFFF</textcolor>
@@ -540,7 +540,7 @@
                     <!-- TV badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>280</left>
+                        <left>220</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -549,7 +549,7 @@
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>280</left>
+                        <left>220</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -563,10 +563,10 @@
                     <!-- Title below poster -->
                     <control type="label">
                         <left>10</left>
-                        <top>410</top>
-                        <width>380</width>
+                        <top>350</top>
+                        <width>300</width>
                         <height>28</height>
-                        <font>font13</font>
+                        <font>font12</font>
                         <textcolor>AAFFFFFF</textcolor>
                         <align>center</align>
                         <label>$INFO[ListItem.Property(release_title)]</label>
@@ -575,34 +575,34 @@
                     <!-- Year below title -->
                     <control type="label">
                         <left>10</left>
-                        <top>438</top>
-                        <width>380</width>
+                        <top>378</top>
+                        <width>300</width>
                         <height>22</height>
-                        <font>font11</font>
+                        <font>font10</font>
                         <textcolor>55FFFFFF</textcolor>
                         <align>center</align>
                         <label>$INFO[ListItem.Property(year)]</label>
                     </control>
                 </itemlayout>
 
-                <!-- Focused poster: Blue glow border with title - 3 COLUMNS LAYOUT -->
-                <focusedlayout height="470" width="400">
+                <!-- Focused poster: Blue glow border with title - 4 COLUMNS LAYOUT -->
+                <focusedlayout height="470" width="320">
                     <!-- Glow effect -->
                     <control type="image">
-                        <left>60</left>
+                        <left>40</left>
                         <top>0</top>
-                        <width>280</width>
-                        <height>410</height>
+                        <width>240</width>
+                        <height>350</height>
                         <texture>white.png</texture>
                         <colordiffuse>FF4da6ff</colordiffuse>
                     </control>
 
                     <!-- Poster -->
                     <control type="image">
-                        <left>70</left>
+                        <left>50</left>
                         <top>10</top>
-                        <width>260</width>
-                        <height>390</height>
+                        <width>220</width>
+                        <height>330</height>
                         <texture fallback="DefaultVideo.png">$INFO[ListItem.Property(poster)]</texture>
                         <aspectratio>scale</aspectratio>
                     </control>
@@ -610,18 +610,18 @@
                     <!-- Movie badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>260</left>
+                        <left>195</left>
                         <top>18</top>
-                        <width>60</width>
+                        <width>65</width>
                         <height>24</height>
                         <texture>white.png</texture>
                         <colordiffuse>FFFF6B6B</colordiffuse>
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),movie)</visible>
-                        <left>260</left>
+                        <left>195</left>
                         <top>18</top>
-                        <width>60</width>
+                        <width>65</width>
                         <height>24</height>
                         <font>font10</font>
                         <textcolor>FFFFFFFF</textcolor>
@@ -633,7 +633,7 @@
                     <!-- TV badge -->
                     <control type="image">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>280</left>
+                        <left>220</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -642,7 +642,7 @@
                     </control>
                     <control type="label">
                         <visible>String.IsEqual(ListItem.Property(media_type),tv)</visible>
-                        <left>280</left>
+                        <left>220</left>
                         <top>18</top>
                         <width>40</width>
                         <height>24</height>
@@ -656,10 +656,10 @@
                     <!-- Title below poster -->
                     <control type="label">
                         <left>10</left>
-                        <top>420</top>
-                        <width>380</width>
+                        <top>360</top>
+                        <width>300</width>
                         <height>28</height>
-                        <font>font13</font>
+                        <font>font12</font>
                         <textcolor>FFFFFFFF</textcolor>
                         <align>center</align>
                         <label>[B]$INFO[ListItem.Property(release_title)][/B]</label>
@@ -668,10 +668,10 @@
                     <!-- Year below title -->
                     <control type="label">
                         <left>10</left>
-                        <top>448</top>
-                        <width>380</width>
+                        <top>388</top>
+                        <width>300</width>
                         <height>22</height>
-                        <font>font11</font>
+                        <font>font10</font>
                         <textcolor>88FFFFFF</textcolor>
                         <align>center</align>
                         <label>$INFO[ListItem.Property(year)]</label>
