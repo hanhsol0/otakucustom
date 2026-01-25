@@ -2229,11 +2229,11 @@ def FANART(payload: str, params: dict):
 def get_menu_items(menu_type):
     items = {
         'main': [
+            (control.lang(30457), "for_you", 'favourites.png', {}),
             (control.lang(30001), "airing_calendar", 'airing_anime_calendar.png', {}),
             (control.lang(30002), "airing_last_season", 'airing_anime.png', {}),
             (control.lang(30003), "airing_this_season", 'airing_anime.png', {}),
             (control.lang(30004), "airing_next_season", 'airing_anime.png', {}),
-            (control.lang(30457), "for_you", 'favourites.png', {}),
             (control.lang(30005), "movies", 'movies.png', {}),
             (control.lang(30006), "tv_shows", 'tv_shows.png', {}),
             (control.lang(30007), "tv_shorts", 'tv_shorts.png', {}),
@@ -4421,11 +4421,11 @@ def SETUP_WIZARD(payload, params):
 
     # Yes selected
     if choice == 1:
-        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'for_you', 'movies', 'tv_shows', 'tv_shorts', 'specials', 'ovas', 'onas', 'music', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
+        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'for_you', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'movies', 'tv_shows', 'tv_shorts', 'specials', 'ovas', 'onas', 'music', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
 
     # No selected
     elif choice == 0:
-        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'for_you', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
+        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'for_you', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
 
     # Ask the user to select between Subs or Dubs
     # Here the button labels are:

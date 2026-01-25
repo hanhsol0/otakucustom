@@ -92,7 +92,7 @@ class SyncDatabase:
             self._update_menu_config('music.mainmenu.config', 'last_watched_music', 'watch_history_music')
 
             # Add "For You" to main menu for existing users
-            self._add_menu_item('menu.mainmenu.config', 'for_you', after='airing_next_season')
+            self._add_menu_item('menu.mainmenu.config', 'for_you', after='watch_history')
 
     def _add_menu_item(self, config_key, item, after=None):
         """Add a menu item if not already present"""
