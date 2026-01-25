@@ -3,14 +3,13 @@
 import xbmcgui
 import time
 
-from resources.lib import Main
 from resources.lib.ui import control
 from resources.lib.windows.anichart_window import BaseWindow
 from resources.lib import WatchlistIntegration
 
 
-class ForYouWindow(BaseWindow):
-    """Custom window for 'For You' recommendations with filter toggle."""
+class InfoWallWindow(BaseWindow):
+    """Generic info wall window for displaying anime with poster grid and info panel."""
 
     FILTER_TV = 'tv'
     FILTER_MOVIE = 'movie'
@@ -22,7 +21,7 @@ class ForYouWindow(BaseWindow):
     BUTTON_ALL = 102
     LIST_CONTROL = 1000
 
-    def __init__(self, xml_file, location, anime_items=None):
+    def __init__(self, xml_file, location, anime_items=None, title="", mode="default"):
         super().__init__(xml_file, location)
         self.all_items = anime_items or []
         self.filtered_items = []
@@ -31,9 +30,15 @@ class ForYouWindow(BaseWindow):
         self.position = -1
         self.last_action_time = 0
         self.last_touch_position = -1
+        self.window_title = title
+        self.mode = mode  # "for_you", "recommendations", "relations", etc.
 
     def onInit(self):
         self.display_list = self.getControl(self.LIST_CONTROL)
+
+        # Set window title
+        if self.window_title:
+            self.setProperty('window.title', self.window_title)
 
         # Set initial filter state
         self.setProperty('filter.active', self.current_filter)
@@ -84,7 +89,7 @@ class ForYouWindow(BaseWindow):
 
             self.display_list.addItem(menu_item)
 
-        control.log(f"[FOR_YOU] Showing {count} items with filter: {self.current_filter}", "info")
+        control.log(f"[INFO_WALL] Showing {count} items with filter: {self.current_filter}", "info")
 
     def _set_filter(self, new_filter):
         """Change the active filter."""
@@ -102,7 +107,6 @@ class ForYouWindow(BaseWindow):
         elif controlId == self.BUTTON_ALL:
             self._set_filter(self.FILTER_ALL)
         elif controlId == self.LIST_CONTROL:
-            # Handle item selection
             self.handle_action(controlId)
 
     def onDoubleClick(self, controlId):
@@ -126,12 +130,10 @@ class ForYouWindow(BaseWindow):
             if focused_id == self.LIST_CONTROL:
                 self.handle_action(actionID)
             elif focused_id in [self.BUTTON_TV, self.BUTTON_MOVIE, self.BUTTON_ALL]:
-                # Button click handled by onClick
                 pass
 
         elif actionID in [xbmcgui.ACTION_TOUCH_TAP, xbmcgui.ACTION_MOUSE_LEFT_CLICK]:
             if self.getFocusId() == self.LIST_CONTROL:
-                # Touch/mouse - require double tap
                 current_time = time.time()
                 current_position = self.display_list.getSelectedPosition()
                 time_diff = current_time - self.last_action_time
@@ -167,8 +169,13 @@ class ForYouWindow(BaseWindow):
         if not anime_id:
             return
 
-        context_menu_options = ["Remove from For You"]
+        context_menu_options = []
 
+        # Mode-specific options
+        if self.mode == "for_you":
+            context_menu_options.append("Remove from For You")
+
+        # Common options based on settings
         if control.getBool('context.otaku.testing.ratethis'):
             context_menu_options.append("Rate This")
         if control.getBool('context.otaku.testing.watchlist'):
@@ -180,6 +187,9 @@ class ForYouWindow(BaseWindow):
         if control.getBool('context.otaku.testing.getwatchorder'):
             context_menu_options.append("Get Watch Order")
 
+        if not context_menu_options:
+            return
+
         context = control.context_menu(context_menu_options)
         if context < 0:
             return
@@ -189,7 +199,6 @@ class ForYouWindow(BaseWindow):
         if choice == "Remove from For You":
             from resources.lib.ui import database
             database.dismiss_recommendation(int(anime_id))
-            # Remove from current lists
             self.all_items = [i for i in self.all_items if i.get('mal_id') != anime_id and i.get('id') != anime_id]
             self._apply_filter()
 
@@ -228,38 +237,7 @@ class ForYouWindow(BaseWindow):
         selected_item = self.filtered_items[self.position]
         anime_id = selected_item.get('mal_id') or selected_item.get('id')
 
-        if not anime_id:
-            control.log("[FOR_YOU] Error: Could not find anime ID in selected item", "error")
-            return
-
-        # Ensure numeric ID
-        try:
-            if not isinstance(anime_id, int):
-                anime_id = int(anime_id) if str(anime_id).isdigit() else anime_id
-        except (ValueError, AttributeError):
-            pass
-
-        control.log(f"[FOR_YOU] Opening anime: {anime_id}", "info")
-
-        # Fetch anime data to ensure it's cached
-        from resources.lib.OtakuBrowser import OtakuBrowser
-        OtakuBrowser().get_anime_data(anime_id)
-
-        # Show progress and navigate
-        control.progressDialog.create(control.ADDON_NAME, "Loading..")
-        try:
-            Main.ANIMES_PAGE(f"{anime_id}/", {})
-        finally:
-            control.progressDialog.close()
-        self.close()
-
-
-def open_for_you_window(anime_items):
-    """Open the For You window with the given items."""
-    window = ForYouWindow(
-        'for_you.xml',
-        control.ADDON_PATH,
-        anime_items=anime_items
-    )
-    window.doModal()
-    del window
+        if anime_id:
+            from resources.lib import Main
+            Main.ANIMES(f"{anime_id}/", {})
+            self.close()

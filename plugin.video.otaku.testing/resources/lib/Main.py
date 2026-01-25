@@ -214,8 +214,8 @@ def ANIMES_PAGE(payload, params):
 @Route('find_recommendations/*')
 def FIND_RECOMMENDATIONS(payload, params):
     path, mal_id, eps_watched = payload.rsplit("/")
-    page = int(params.get('page', 1))
-    control.draw_items(BROWSER.get_recommendations(mal_id, page), 'tvshows')
+    from resources.lib.windows import show_info_wall
+    show_info_wall.show_recommendations(mal_id)
 
 
 @Route('for_you')
@@ -240,7 +240,8 @@ def DISMISS_RECOMMENDATION(payload, params):
 @Route('find_relations/*')
 def FIND_RELATIONS(payload, params):
     path, mal_id, eps_watched = payload.rsplit("/")
-    control.draw_items(BROWSER.get_relations(mal_id), 'tvshows')
+    from resources.lib.windows import show_info_wall
+    show_info_wall.show_relations(mal_id)
 
 
 @Route('watch_order/*')
