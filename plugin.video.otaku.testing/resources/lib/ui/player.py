@@ -618,19 +618,11 @@ class WatchlistPlayer(player):
 
             # Get list of available audio languages
             audio_langs = [s.get('language', '') for s in audio_streams]
-            is_japanese_audio = "jpn" in audio_langs or preferred_audio_streams == "jpn"
-            is_dub_audio = "eng" in audio_langs and "jpn" not in audio_langs
 
-            # Simple subtitle visibility logic:
-            # - If user wants no subs: hide them
-            # - If Japanese audio: show subs (unless pref is none)
-            # - If dub audio: respect dubsubtitles setting
+            # Simple subtitle visibility: show subs if user wants them
             if preferred_subtitle_lang == "none":
                 self.showSubtitles(False)
                 control.log('Subtitles hidden (preference is none)', 'info')
-            elif is_dub_audio and not control.getBool('general.dubsubtitles'):
-                self.showSubtitles(False)
-                control.log('Subtitles hidden (dub audio, dubsubtitles disabled)', 'info')
             else:
                 self.showSubtitles(True)
                 control.log('Subtitles enabled', 'info')
