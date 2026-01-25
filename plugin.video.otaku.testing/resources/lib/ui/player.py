@@ -239,13 +239,16 @@ class WatchlistPlayer(player):
             self.setup_audio_and_subtitles()
 
         # Handle different media types
+        control.log(f'Media type handling: episodes={self.episodes}, media_type={self.media_type}', 'info')
         if self.episodes:
             # Handle playlist building if needed
             if self.media_type == 'episode' and playList.size() == 1:
                 self.build_playlist()
 
             # Handle skip intro functionality
+            control.log('Calling _handle_skip_intro...', 'info')
             self._handle_skip_intro()
+            control.log('_handle_skip_intro completed', 'info')
 
             # Handle watchlist updates for episodes
             self.onWatchedPercent()
@@ -266,8 +269,10 @@ class WatchlistPlayer(player):
 
     def _handle_skip_intro(self):
         """Handle skip intro functionality with fallbacks - optimized"""
+        control.log(f'_handle_skip_intro called: skipintrodialog={control.getBool("smartplay.skipintrodialog")}, auto={self.skipintro_aniskip_auto}', 'info')
         # Only proceed if skip intro dialog is enabled OR auto-skip is enabled
         if not (control.getBool('smartplay.skipintrodialog') or self.skipintro_aniskip_auto):
+            control.log('Skip intro disabled, returning', 'info')
             return
 
         # Wait for skip times to be processed (with timeout)
@@ -290,21 +295,30 @@ class WatchlistPlayer(player):
             control.log('Using default intro skip times - no aniskip data found')
 
         # Optimized monitoring - check less frequently
+        control.log('Starting intro monitoring loop...', 'info')
+        loop_count = 0
         while self.isPlaying():
             self.current_time = int(self.getTime())
+            loop_count += 1
+            if loop_count % 5 == 0:  # Log every 10 seconds
+                control.log(f'Intro monitor: current_time={self.current_time}, intro_start={intro_start}, intro_end={intro_end}', 'info')
             if self.current_time > intro_end:
                 control.log(f'Past intro end ({self.current_time} > {intro_end}), stopping intro monitor', 'info')
                 break
             elif self.current_time > intro_start:
+                control.log(f'In intro range ({intro_start} < {self.current_time} < {intro_end}), showing dialog', 'info')
                 # Auto skip ONLY if enabled AND we have aniskip data
                 if self.skipintro_aniskip_auto and self.skipintro_aniskip:
                     self.seekTime(intro_end)
                     control.log(f'Auto-skipped intro: {intro_start}-{intro_end}')
                 else:
                     # Show skip intro dialog (works for both aniskip data and default times)
+                    control.log('Calling PlayerDialogs().show_skip_intro...', 'info')
                     PlayerDialogs().show_skip_intro(self.skipintro_aniskip, intro_end)
+                    control.log('show_skip_intro returned', 'info')
                 break
             xbmc.sleep(2000)  # Check every 2 seconds instead of 1
+        control.log(f'Intro monitoring loop ended after {loop_count} iterations', 'info')
 
     def _handle_outro_and_playing_next(self):
         """Handle outro skip and playing next functionality with fallbacks - optimized"""
