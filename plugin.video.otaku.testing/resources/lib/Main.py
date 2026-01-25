@@ -4421,11 +4421,11 @@ def SETUP_WIZARD(payload, params):
 
     # Yes selected
     if choice == 1:
-        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'movies', 'tv_shows', 'tv_shorts', 'specials', 'ovas', 'onas', 'music', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
+        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'for_you', 'movies', 'tv_shows', 'tv_shorts', 'specials', 'ovas', 'onas', 'music', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
 
     # No selected
     elif choice == 0:
-        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
+        control.setStringList('menu.mainmenu.config', ['last_watched', 'watch_history', 'airing_calendar', 'airing_last_season', 'airing_this_season', 'airing_next_season', 'for_you', 'trending', 'popular', 'voted', 'favourites', 'top_100', 'genres', 'search', 'tools'])
 
     # Ask the user to select between Subs or Dubs
     # Here the button labels are:

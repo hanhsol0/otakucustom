@@ -91,6 +91,20 @@ class SyncDatabase:
             self._update_menu_config('ona.mainmenu.config', 'last_watched_ona', 'watch_history_ona')
             self._update_menu_config('music.mainmenu.config', 'last_watched_music', 'watch_history_music')
 
+            # Add "For You" to main menu for existing users
+            self._add_menu_item('menu.mainmenu.config', 'for_you', after='airing_next_season')
+
+    def _add_menu_item(self, config_key, item, after=None):
+        """Add a menu item if not already present"""
+        menu = control.getStringList(config_key)
+        if menu and item not in menu:
+            if after and after in menu:
+                insert_index = menu.index(after) + 1
+                menu.insert(insert_index, item)
+            else:
+                menu.append(item)
+            control.setStringList(config_key, menu)
+
     def _update_menu_config(self, config_key, last_watched_item, watch_history_item):
         """Helper method to update menu configurations with last_watched and watch_history items"""
         menu = control.getStringList(config_key)
