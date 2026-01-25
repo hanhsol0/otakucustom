@@ -435,15 +435,8 @@ def sort_by_debrid_provider(list_, reverse):
 
 
 def sort_by_source_type(list_, reverse):
-    def source_type_key(item):
-        if item['type'] == 'torrent':
-            return 0
-        elif item['type'] == 'torrent (uncached)':
-            return 1
-        else:
-            return 2
-
-    list_.sort(key=source_type_key)
+    # Sort by source type categories only (no cached vs uncached distinction)
+    # This allows resolution to be the deciding factor within torrent sources
     for i in range(len(SORT_OPTIONS['source type']), 0, -1):
         list_.sort(key=lambda x: x['type'] in source_type[int(sort_options[f'source type.{i}'])], reverse=reverse)
     return list_
