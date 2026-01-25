@@ -177,6 +177,8 @@ class ForYouWindow(BaseWindow):
             context_menu_options.append("Get Watch Order")
         if control.getBool('context.otaku.testing.watchlist'):
             context_menu_options.append("WatchList Manager")
+        if control.getBool('context.otaku.testing.ratethis'):
+            context_menu_options.append("Rate This")
 
         context = control.context_menu(context_menu_options)
         if context < 0:
@@ -210,6 +212,11 @@ class ForYouWindow(BaseWindow):
             payload = f"some_path/{anime_id}/0"
             params = {}
             WatchlistIntegration.CONTEXT_MENU(payload, params)
+
+        elif choice == "Rate This":
+            payload = f"some_path/{anime_id}/0"
+            params = {}
+            WatchlistIntegration.RATE_ANIME(payload, params)
 
     def handle_action(self, actionID):
         """Handle item selection - navigate to anime page."""
