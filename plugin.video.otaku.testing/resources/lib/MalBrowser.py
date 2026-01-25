@@ -1541,7 +1541,7 @@ class MalBrowser(BrowserBase):
         show_meta = database.get_show_meta(mal_id)
         kodi_meta = pickle.loads(show_meta.get('art')) if show_meta else {}
 
-        title = res[self.title_lang] or res['title']
+        title = res.get(self.title_lang) or res.get('title') or 'Unknown'
         rating = res.get('rating')
         if rating == 'Rx - Hentai':
             title += ' - ' + control.colorstr("Adult", 'red')
@@ -1583,7 +1583,9 @@ class MalBrowser(BrowserBase):
 
         dub = True if mal_dub and mal_dub.get(str(mal_id)) else False
 
-        image = res['images']['webp']['large_image_url']
+        # Handle different image structures (full anime data vs minimal entry data)
+        images = res.get('images', {})
+        image = images.get('webp', {}).get('large_image_url') or images.get('jpg', {}).get('large_image_url') or ''
         base = {
             "name": title,
             "url": f'animes/{mal_id}/',
@@ -1606,7 +1608,7 @@ class MalBrowser(BrowserBase):
             clearlogo = kodi_meta['clearlogo']
             base['clearlogo'] = random.choice(clearlogo) if isinstance(clearlogo, list) else clearlogo
 
-        if res['episodes'] == 1:
+        if res.get('episodes') == 1:
             base['url'] = f'play_movie/{mal_id}/'
             base['info']['mediatype'] = 'movie'
             return utils.parse_view(base, False, True, dub)
@@ -1617,23 +1619,25 @@ class MalBrowser(BrowserBase):
 
         try:
             start_date = res['aired']['from']
-        except TypeError:
+        except (TypeError, KeyError):
             start_date = None
 
-        title_userPreferred = res[self.title_lang] or res['title']
+        title_userPreferred = res.get(self.title_lang) or res.get('title') or 'Unknown'
 
-        name = res['title']
-        ename = res['title_english']
+        name = res.get('title') or 'Unknown'
+        ename = res.get('title_english') or name
         titles = f"({name})|({ename})"
 
+        images = res.get('images', {})
+        poster = images.get('webp', {}).get('large_image_url') or images.get('jpg', {}).get('large_image_url') or ''
         kodi_meta = {
             'name': name,
             'ename': ename,
             'title_userPreferred': title_userPreferred,
             'start_date': start_date,
             'query': titles,
-            'episodes': res['episodes'],
-            'poster': res['images']['webp']['large_image_url'],
+            'episodes': res.get('episodes'),
+            'poster': poster,
             'status': res.get('status'),
             'format': res.get('type'),
             'plot': res.get('synopsis'),
