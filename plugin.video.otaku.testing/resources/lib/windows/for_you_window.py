@@ -254,18 +254,22 @@ class ForYouWindow(BaseWindow):
         except (ValueError, AttributeError):
             pass
 
-        control.log(f"[FOR_YOU] Opening anime: {anime_id}", "info")
+        media_type = selected_item.get('media_type', '')
 
         # Fetch anime data to ensure it's cached
         from resources.lib.OtakuBrowser import OtakuBrowser
         OtakuBrowser().get_anime_data(anime_id)
 
-        # Show progress and navigate
-        control.progressDialog.create(control.ADDON_NAME, "Loading..")
-        try:
-            Main.ANIMES_PAGE(f"{anime_id}/", {})
-        finally:
-            control.progressDialog.close()
+        if media_type == 'movie':
+            control.log(f"[FOR_YOU] Playing movie: {anime_id}", "info")
+            Main.PLAY_MOVIE(f"{anime_id}/", {})
+        else:
+            control.log(f"[FOR_YOU] Opening anime: {anime_id}", "info")
+            control.progressDialog.create(control.ADDON_NAME, "Loading..")
+            try:
+                Main.ANIMES_PAGE(f"{anime_id}/", {})
+            finally:
+                control.progressDialog.close()
         self.close()
 
 

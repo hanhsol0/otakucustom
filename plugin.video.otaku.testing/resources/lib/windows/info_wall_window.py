@@ -248,5 +248,9 @@ class InfoWallWindow(BaseWindow):
 
         if anime_id:
             from resources.lib import Main
-            Main.ANIMES(f"{anime_id}/", {})
+            media_type = selected_item.get('media_type', '')
+            if media_type == 'movie':
+                Main.PLAY_MOVIE(f"{anime_id}/", {})
+            else:
+                Main.ANIMES(f"{anime_id}/", {})
             self.close()

@@ -221,12 +221,8 @@ def FIND_RECOMMENDATIONS(payload, params):
 def FOR_YOU(payload, params):
     from resources.lib.windows.for_you_window import open_for_you_window
     anime_items = BROWSER.get_for_you_window_data()
-    if anime_items:
-        open_for_you_window(anime_items)
-    else:
-        # Fallback to standard view if no custom data
-        page = int(params.get('page', 1))
-        control.draw_items(BROWSER.get_for_you(page), 'tvshows', view_mode=54)
+    open_for_you_window(anime_items)
+    control.exit_code()
 
 
 @Route('dismiss_recommendation/*')
