@@ -145,11 +145,17 @@ class Anichart(BaseWindow):
             elif choice == "Delete From Database":
                 payload = f"some_path/{anime}/0"
                 params = {}
-                Main.DELETE_ANIME_DATABASE(payload, params)
+                try:
+                    Main.DELETE_ANIME_DATABASE(payload, params)
+                except SystemExit:
+                    pass
             elif choice == "WatchList Manager":
                 payload = f"some_path/{anime}/0"
                 params = {}
-                WatchlistIntegration.CONTEXT_MENU(payload, params)
+                try:
+                    WatchlistIntegration.CONTEXT_MENU(payload, params)
+                except SystemExit:
+                    pass
 
     def handle_action(self, actionID) -> None:
         # only act when focus is on our list

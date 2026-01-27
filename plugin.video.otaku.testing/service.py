@@ -225,6 +225,20 @@ def version_check():
         control.setSetting('otaku.version', control.ADDON_VERSION)
         control.log(f"### {reuselang} Re-uselanguageinvoker")
 
+        # Clear For You cache so recommendations rebuild with any new logic
+        try:
+            from resources.lib.ui import database
+            database.clear_for_you_cache()
+            control.log('### Cleared For You cache after version update')
+        except Exception:
+            pass
+
+        # Force Kodi to rescan addons and reload skin to pick up
+        # any changes to context menus, skin XMLs, etc.
+        control.execute('UpdateLocalAddons')
+        control.execute('ReloadSkin()')
+        control.log('### Forced addon rescan and skin reload after version update')
+
 
 def apply_migration_settings():
     if os.path.exists(control.migrationSettings):

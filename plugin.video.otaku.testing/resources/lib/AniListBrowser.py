@@ -1393,8 +1393,8 @@ class AniListBrowser(BrowserBase):
         - Tracks community recommendation score for display
         """
         # Get user's watched anime with their scores
-        completed = database.get_watchlist_cache(flavor_name, 'COMPLETED', limit=20)
-        current = database.get_watchlist_cache(flavor_name, 'CURRENT', limit=5)
+        completed = database.get_watchlist_cache(flavor_name, 'COMPLETED', limit=50)
+        current = database.get_watchlist_cache(flavor_name, 'CURRENT', limit=10)
 
         source_anime = []  # [(mal_id, user_score)]
         watched_ids = set()
@@ -1433,12 +1433,12 @@ class AniListBrowser(BrowserBase):
 
         # Aggregate recommendations with weighting
         recommendations = {}
-        for mal_id, user_score in source_anime[:15]:
+        for mal_id, user_score in source_anime[:25]:
             # Weight: 2x for anime rated 8+, 1x otherwise
             weight = 2 if user_score >= 8 else 1
 
             recs = database.get(self.get_recommendations_res, 24, {
-                'page': 1, 'perPage': 10, 'idMal': int(mal_id)
+                'page': 1, 'perPage': 20, 'idMal': int(mal_id)
             })
             if not recs or 'edges' not in recs:
                 continue
@@ -1475,7 +1475,7 @@ class AniListBrowser(BrowserBase):
 
         # Store community rating in data for UI display
         result = []
-        for r in sorted_recs[:100]:
+        for r in sorted_recs[:200]:
             anime_data = r['data'].copy()
             anime_data['_for_you_score'] = r['community_rating']  # For UI display
             anime_data['_rec_count'] = r['count']  # How many of your anime recommended this
@@ -1486,7 +1486,7 @@ class AniListBrowser(BrowserBase):
     def _mix_in_trending(self, main_recs, flavor_name):
         """
         Mix in trending/seasonal anime for variety.
-        Adds ~10 anime from current season that match user's top genres.
+        Adds ~20 anime from current season that match user's top genres.
         """
         # Get user's genre preferences from their watchlist
         completed = database.get_watchlist_cache(flavor_name, 'COMPLETED', limit=30)
@@ -1514,7 +1514,7 @@ class AniListBrowser(BrowserBase):
         # Get currently airing anime
         variables = {
             'page': 1,
-            'perpage': 30,
+            'perpage': 50,
             'type': "ANIME",
             'season': season,
             'year': f'{year}%',
@@ -1540,9 +1540,9 @@ class AniListBrowser(BrowserBase):
                 anime['_is_trending'] = True
                 genre_matched.append(anime)
 
-        # Add up to 10 trending anime, distributed throughout the list
+        # Add up to 20 trending anime, distributed throughout the list
         random.shuffle(genre_matched)
-        trending_to_add = genre_matched[:10]
+        trending_to_add = genre_matched[:20]
 
         # Interleave: insert trending items at intervals
         result = main_recs.copy()
@@ -1550,7 +1550,7 @@ class AniListBrowser(BrowserBase):
             insert_pos = min((i + 1) * 8, len(result))  # Every ~8 positions
             result.insert(insert_pos, anime)
 
-        return result[:100]  # Keep top 100
+        return result[:200]  # Keep top 200
 
     def _process_for_you_results(self, all_recs, page):
         """Process cached recommendations for display"""

@@ -212,12 +212,18 @@ class ForYouWindow(BaseWindow):
         elif choice == "WatchList Manager":
             payload = f"some_path/{anime_id}/0"
             params = {}
-            WatchlistIntegration.CONTEXT_MENU(payload, params)
+            try:
+                WatchlistIntegration.CONTEXT_MENU(payload, params)
+            except SystemExit:
+                pass
 
         elif choice == "Rate This":
             payload = f"some_path/{anime_id}/0"
             params = {}
-            WatchlistIntegration.RATE_ANIME(payload, params)
+            try:
+                WatchlistIntegration.RATE_ANIME(payload, params)
+            except SystemExit:
+                pass
             # Remove from current list since rated anime shouldn't appear in For You
             self.all_items = [i for i in self.all_items if i.get('mal_id') != anime_id and i.get('id') != anime_id]
             self._apply_filter()

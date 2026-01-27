@@ -20,7 +20,7 @@ When this skill is invoked, execute the following steps:
 Execute these commands:
 
 ```bash
-cd /c/Users/hdtra/OtakuCustom/otakucustom
+cd /home/hdtra/projects/otakucustom
 
 # Get current version and bump it
 ADDON_XML="plugin.video.otaku.testing/addon.xml"
