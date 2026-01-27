@@ -1466,6 +1466,76 @@ class AniListBrowser(BrowserBase):
                 recommendations[rec_mal_id]['weighted_count'] += weight
                 recommendations[rec_mal_id]['community_rating'] += community_rating
 
+        # Also fetch MAL (Jikan) recommendations for additional variety
+        try:
+            for mal_id, user_score in source_anime[:25]:
+                weight = 2 if user_score >= 8 else 1
+                jikan_url = f'https://api.jikan.moe/v4/anime/{int(mal_id)}/recommendations'
+                mal_recs = database.get(self._get_jikan_recs, 24, jikan_url)
+                if not mal_recs or 'data' not in mal_recs:
+                    continue
+
+                for rec in mal_recs['data'][:20]:
+                    entry = rec.get('entry')
+                    if not entry or not entry.get('mal_id'):
+                        continue
+                    rec_mal_id = entry['mal_id']
+
+                    if rec_mal_id in watched_ids or rec_mal_id in rated_ids:
+                        continue
+
+                    votes = rec.get('votes', 0) or 0
+
+                    # Already have this from AniList - just boost the score
+                    if rec_mal_id in recommendations:
+                        recommendations[rec_mal_id]['count'] += 1
+                        recommendations[rec_mal_id]['weighted_count'] += weight
+                        recommendations[rec_mal_id]['community_rating'] += votes
+                        continue
+
+                    # Convert MAL entry to AniList-compatible format (stub - enriched below)
+                    recommendations[rec_mal_id] = {
+                        'count': 1,
+                        'weighted_count': weight,
+                        'community_rating': votes,
+                        'data': {
+                            'idMal': rec_mal_id,
+                            'id': rec_mal_id,
+                            'title': {
+                                'romaji': entry.get('title', ''),
+                                'english': entry.get('title', ''),
+                            },
+                            'format': None,
+                            'description': '',
+                            'genres': [],
+                            'status': '',
+                            'episodes': None,
+                            'seasonYear': None,
+                            'averageScore': None,
+                            'coverImage': {'extraLarge': entry.get('images', {}).get('jpg', {}).get('large_image_url', '')},
+                            'bannerImage': '',
+                            '_mal_only': True,
+                        }
+                    }
+        except Exception as e:
+            control.log(f'### For You: MAL recs failed: {e}', 'warning')
+
+        # Enrich MAL-only recs with AniList data for correct format/metadata
+        mal_only_ids = [
+            mal_id for mal_id, rec in recommendations.items()
+            if rec['data'].get('_mal_only')
+        ]
+        if mal_only_ids:
+            try:
+                enriched = self._batch_lookup_mal_ids(mal_only_ids)
+                enriched_map = {a['idMal']: a for a in enriched if a.get('idMal')}
+                for mal_id in mal_only_ids:
+                    if mal_id in enriched_map:
+                        recommendations[mal_id]['data'] = enriched_map[mal_id]
+                control.log(f'### For You: Enriched {len(enriched_map)}/{len(mal_only_ids)} MAL-only recs')
+            except Exception as e:
+                control.log(f'### For You: AniList enrichment failed: {e}', 'warning')
+
         # Sort by weighted count (prefers recs from highly-rated anime), then community rating
         sorted_recs = sorted(
             recommendations.values(),
@@ -1475,13 +1545,57 @@ class AniListBrowser(BrowserBase):
 
         # Store community rating in data for UI display
         result = []
-        for r in sorted_recs[:200]:
+        for r in sorted_recs:
             anime_data = r['data'].copy()
             anime_data['_for_you_score'] = r['community_rating']  # For UI display
             anime_data['_rec_count'] = r['count']  # How many of your anime recommended this
             result.append(anime_data)
 
         return result
+
+    @staticmethod
+    def _get_jikan_recs(url):
+        r = client.get(url)
+        return r.json() if r else None
+
+    def _batch_lookup_mal_ids(self, mal_ids):
+        """Batch lookup anime on AniList by MAL IDs to get full metadata."""
+        query = '''
+        query ($ids: [Int], $page: Int, $perPage: Int) {
+            Page(page: $page, perPage: $perPage) {
+                media(idMal_in: $ids, type: ANIME) {
+                    id
+                    idMal
+                    title {
+                        romaji
+                        english
+                    }
+                    format
+                    episodes
+                    description(asHtml: false)
+                    genres
+                    status
+                    seasonYear
+                    averageScore
+                    coverImage {
+                        extraLarge
+                    }
+                    bannerImage
+                }
+            }
+        }
+        '''
+        results = []
+        for i in range(0, len(mal_ids), 50):
+            batch = mal_ids[i:i + 50]
+            variables = {'ids': batch, 'page': 1, 'perPage': 50}
+            response = client.post(self._BASE_URL, json_data={'query': query, 'variables': variables})
+            if response:
+                data = response.json()
+                if 'data' in data and data['data'].get('Page'):
+                    media = data['data']['Page'].get('media', [])
+                    results.extend(media)
+        return results
 
     def _mix_in_trending(self, main_recs, flavor_name):
         """
@@ -1550,7 +1664,7 @@ class AniListBrowser(BrowserBase):
             insert_pos = min((i + 1) * 8, len(result))  # Every ~8 positions
             result.insert(insert_pos, anime)
 
-        return result[:200]  # Keep top 200
+        return result
 
     def _process_for_you_results(self, all_recs, page):
         """Process cached recommendations for display"""
@@ -1643,7 +1757,7 @@ class AniListBrowser(BrowserBase):
             title = res['title'].get(self.title_lang) or res['title'].get('romaji', '')
 
             # Determine media type from format
-            format_type = res.get('format', 'TV')
+            format_type = res.get('format') or 'TV'
             media_type = 'movie' if format_type == 'MOVIE' else 'tv'
 
             # Clean description

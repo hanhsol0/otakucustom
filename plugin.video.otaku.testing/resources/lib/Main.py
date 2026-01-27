@@ -223,6 +223,10 @@ def FOR_YOU(payload, params):
     anime_items = BROWSER.get_for_you_window_data()
     if anime_items:
         open_for_you_window(anime_items)
+        # Tell Kodi there's no directory listing - custom window handled display.
+        # Without this, Kodi retries the route and shows the fallback listing.
+        import xbmcplugin
+        xbmcplugin.endOfDirectory(control.HANDLE, succeeded=False)
     else:
         # Fallback to standard view if no custom data
         page = int(params.get('page', 1))
@@ -370,7 +374,9 @@ def AIRING_CALENDAR(payload: str, params: dict):
 
         from resources.lib.windows.anichart import Anichart
         Anichart('anichart.xml', control.ADDON_PATH, calendar=formatted_calendar).doModal()
-    control.exit_code()
+    # Tell Kodi there's no directory listing - custom window handled display.
+    import xbmcplugin
+    xbmcplugin.endOfDirectory(control.HANDLE, succeeded=False)
 
 
 @Route('airing_last_season')

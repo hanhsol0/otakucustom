@@ -232,7 +232,7 @@ class ForYouWindow(BaseWindow):
             database.clear_for_you_cache()
 
     def handle_action(self, actionID):
-        """Handle item selection - navigate to anime page."""
+        """Handle item selection - navigate to anime page or play movie."""
         if self.getFocusId() != self.LIST_CONTROL:
             return
 
@@ -254,19 +254,25 @@ class ForYouWindow(BaseWindow):
         except (ValueError, AttributeError):
             pass
 
-        control.log(f"[FOR_YOU] Opening anime: {anime_id}", "info")
+        media_type = selected_item.get('media_type', '')
 
         # Fetch anime data to ensure it's cached
         from resources.lib.OtakuBrowser import OtakuBrowser
         OtakuBrowser().get_anime_data(anime_id)
 
-        # Show progress and navigate
-        control.progressDialog.create(control.ADDON_NAME, "Loading..")
-        try:
-            Main.ANIMES_PAGE(f"{anime_id}/", {})
-        finally:
-            control.progressDialog.close()
-        self.close()
+        if media_type == 'movie':
+            # Movies go straight to play (autoplay or source select based on settings)
+            control.log(f"[FOR_YOU] Playing movie: {anime_id}", "info")
+            Main.PLAY_MOVIE(f"{anime_id}/", {})
+        else:
+            # TV shows go to the episode listing
+            control.log(f"[FOR_YOU] Opening anime: {anime_id}", "info")
+            control.progressDialog.create(control.ADDON_NAME, "Loading..")
+            try:
+                Main.ANIMES_PAGE(f"{anime_id}/", {})
+            finally:
+                control.progressDialog.close()
+            self.close()
 
 
 def open_for_you_window(anime_items):
