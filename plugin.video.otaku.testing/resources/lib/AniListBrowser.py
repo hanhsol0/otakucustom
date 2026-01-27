@@ -1677,8 +1677,9 @@ class AniListBrowser(BrowserBase):
                     if r.get('idMal') not in dismissed
                     and str(r.get('idMal')) not in completed]
 
-        # Collect metadata
-        get_meta.collect_meta(filtered)
+        # Use lightweight meta — AniList data has poster/banner already.
+        # Full artwork (Fanart.tv/TMDB) gets fetched when user clicks an item.
+        get_meta.collect_meta(filtered, lightweight=True)
 
         # Batch fetch MDBList ratings for all MAL IDs
         mal_ids = [r.get('idMal') for r in filtered if r.get('idMal')]
@@ -1690,6 +1691,12 @@ class AniListBrowser(BrowserBase):
             except Exception:
                 pass
 
+        # Batch fetch all show_meta in one query instead of 1-per-item
+        all_mal_ids = [r.get('idMal') for r in filtered if r.get('idMal')]
+        meta_map = {}
+        if all_mal_ids:
+            meta_map = database.get_show_meta_batch(all_mal_ids)
+
         # Format for window display
         window_items = []
         for res in filtered:
@@ -1698,7 +1705,7 @@ class AniListBrowser(BrowserBase):
                 continue
 
             # Get cached metadata for artwork
-            show_meta = database.get_show_meta(mal_id)
+            show_meta = meta_map.get(mal_id)
             kodi_meta = pickle.loads(show_meta.get('art')) if show_meta else {}
 
             title = res['title'].get(self.title_lang) or res['title'].get('romaji', '')

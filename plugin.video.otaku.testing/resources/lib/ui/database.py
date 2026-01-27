@@ -285,6 +285,17 @@ def get_show_meta(mal_id):
         return shows
 
 
+def get_show_meta_batch(mal_ids):
+    """Get show_meta for multiple MAL IDs in a single query. Returns dict keyed by mal_id."""
+    if not mal_ids:
+        return {}
+    with SQL(control.malSyncDB) as cursor:
+        placeholders = ','.join('?' for _ in mal_ids)
+        cursor.execute('SELECT * FROM shows_meta WHERE mal_id IN (%s)' % placeholders, mal_ids)
+        rows = cursor.fetchall()
+        return {row['mal_id']: row for row in rows}
+
+
 def remove_from_database(table, mal_id):
     with SQL(control.malSyncDB) as cursor:
         cursor.execute(f"DELETE FROM {table} WHERE mal_id=?", (mal_id,))
