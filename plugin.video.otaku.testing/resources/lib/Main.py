@@ -223,6 +223,8 @@ def FOR_YOU(payload, params):
     anime_items = BROWSER.get_for_you_window_data()
     if anime_items:
         open_for_you_window(anime_items)
+        import xbmcplugin
+        xbmcplugin.endOfDirectory(control.HANDLE, succeeded=True)
     else:
         # Fallback to standard view if no custom data
         page = int(params.get('page', 1))
@@ -370,6 +372,8 @@ def AIRING_CALENDAR(payload: str, params: dict):
 
         from resources.lib.windows.anichart import Anichart
         Anichart('anichart.xml', control.ADDON_PATH, calendar=formatted_calendar).doModal()
+    import xbmcplugin
+    xbmcplugin.endOfDirectory(control.HANDLE, succeeded=True)
 
 
 @Route('airing_last_season')
