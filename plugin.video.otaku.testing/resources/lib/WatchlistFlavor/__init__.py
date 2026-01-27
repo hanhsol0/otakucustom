@@ -6,6 +6,14 @@ from resources.lib.WatchlistFlavor.WatchlistFlavorBase import WatchlistFlavorBas
 class WatchlistFlavor:
     __SELECTED = None
 
+    # Map flavor names to their status strings for watchlist cache queries
+    _FLAVOR_STATUS_MAP = {
+        'mal': {'completed': 'completed', 'current': 'watching'},
+        'anilist': {'completed': 'COMPLETED', 'current': 'CURRENT'},
+        'kitsu': {'completed': 'completed', 'current': 'current'},
+        'simkl': {'completed': 'completed', 'current': 'watching'},
+    }
+
     def __init__(self):
         raise Exception("Static Class should not be created")
 
@@ -21,6 +29,35 @@ class WatchlistFlavor:
         if not WatchlistFlavor.__SELECTED:
             WatchlistFlavor.__SELECTED = WatchlistFlavor.__instance_flavor(selected)
         return WatchlistFlavor.__SELECTED
+
+    @staticmethod
+    def ensure_watchlist_cached(flavor_names):
+        """
+        Proactively populate watchlist caches for all given flavors.
+        For each flavor, checks if completed/current caches are valid;
+        if not, fetches from API via get_watchlist_status().
+        Runs all flavors in parallel. Errors per-flavor are caught and logged.
+        """
+        from concurrent.futures import ThreadPoolExecutor
+        from resources.lib.ui.database import is_watchlist_cache_valid
+
+        def _ensure_one(flavor_name):
+            try:
+                status_map = WatchlistFlavor._FLAVOR_STATUS_MAP.get(
+                    flavor_name, {'completed': 'COMPLETED', 'current': 'CURRENT'}
+                )
+                for status in [status_map['completed'], status_map['current']]:
+                    if not is_watchlist_cache_valid(flavor_name, status):
+                        control.log('### [ForYou] Cache miss for %s/%s, fetching from API' % (flavor_name, status), 'info')
+                        WatchlistFlavor.watchlist_status_request(flavor_name, status, next_up=False)
+                    else:
+                        control.log('### [ForYou] Cache valid for %s/%s' % (flavor_name, status), 'info')
+            except Exception:
+                import traceback
+                control.log('### [ForYou] Error caching %s: %s' % (flavor_name, traceback.format_exc()), 'warning')
+
+        with ThreadPoolExecutor(max_workers=len(flavor_names)) as executor:
+            list(executor.map(_ensure_one, flavor_names))
 
     @staticmethod
     def watchlist_request(name):
@@ -39,6 +76,7 @@ class WatchlistFlavor:
 
     @staticmethod
     def logout_request(flavor):
+        control.log('### [ForYou Login] Logout for flavor=%s' % flavor, 'info')
         control.setSetting('%s.userid' % flavor, '')
         control.setSetting('%s.authvar' % flavor, '')
         control.setSetting('%s.token' % flavor, '')
@@ -77,6 +115,7 @@ class WatchlistFlavor:
     @staticmethod
     def __set_login(flavor, res):
         if not res:
+            control.log('### [ForYou Login] Login FAILED for flavor=%s' % flavor, 'info')
             return control.ok_dialog('Login', 'Incorrect username or password')
         else:
             mapping = {
@@ -85,14 +124,19 @@ class WatchlistFlavor:
                 'mal': 'MAL',
                 'simkl': 'Simkl'
             }
+            prev_flavor = control.getSetting('watchlist.update.flavor')
+            new_flavor = mapping.get(flavor, flavor.capitalize())
+            control.log('### [ForYou Login] Login SUCCESS flavor=%s, watchlist changing from "%s" to "%s"' % (
+                flavor, prev_flavor, new_flavor), 'info')
             control.setBool('watchlist.update.enabled', True)
-            control.setSetting('watchlist.update.flavor', mapping.get(flavor, flavor.capitalize()))
+            control.setSetting('watchlist.update.flavor', new_flavor)
         for _id, value in list(res.items()):
             setting_name = '%s.%s' % (flavor, _id)
             if _id == 'expiry':
                 control.setInt(setting_name, int(value))
             else:
                 control.setSetting(setting_name, str(value))
+        control.log('### [ForYou Login] Login complete. Note: For You cache NOT cleared here', 'info')
         control.refresh()
         return control.ok_dialog('Login', 'Success')
 

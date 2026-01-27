@@ -408,12 +408,16 @@ def get_for_you_cache():
         cursor.execute('SELECT data, last_updated FROM for_you_cache WHERE id=1')
         row = cursor.fetchone()
         if row and row.get('data'):
-            return pickle.loads(row['data']), row['last_updated']
+            recs = pickle.loads(row['data'])
+            control.log('### [ForYou DB] get_cache: %d recs, updated=%s' % (len(recs), row['last_updated']), 'info')
+            return recs, row['last_updated']
+        control.log('### [ForYou DB] get_cache: NO cache found', 'info')
         return None, None
 
 
 def save_for_you_cache(recommendations):
     """Cache aggregated recommendations (list of anime dicts)"""
+    control.log('### [ForYou DB] save_cache: saving %d recs' % len(recommendations), 'info')
     data = pickle.dumps(recommendations)
     now = int(time.time())
     with SQL(control.malSyncDB) as cursor:
@@ -424,6 +428,7 @@ def save_for_you_cache(recommendations):
 
 def clear_for_you_cache():
     """Clear the For You cache to force rebuild"""
+    control.log('### [ForYou DB] CLEARING for_you cache', 'info')
     with SQL(control.malSyncDB) as cursor:
         cursor.execute('DELETE FROM for_you_cache WHERE id=1')
         cursor.connection.commit()

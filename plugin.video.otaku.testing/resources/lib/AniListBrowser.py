@@ -1356,77 +1356,119 @@ class AniListBrowser(BrowserBase):
         recommendations = database.get(self.get_recommendations_res, 24, variables)
         return self.process_recommendations_view(recommendations, f'find_recommendations/{mal_id}?page=%d', page)
 
+    # Map flavor names to their status strings for watchlist cache queries
+    _FLAVOR_STATUS_MAP = {
+        'mal': {'completed': 'completed', 'current': 'watching'},
+        'anilist': {'completed': 'COMPLETED', 'current': 'CURRENT'},
+        'kitsu': {'completed': 'completed', 'current': 'current'},
+        'simkl': {'completed': 'completed', 'current': 'watching'},
+    }
+
     def get_for_you(self, page):
         """
         Smart 'For You' recommendations:
         - Uses cached aggregated results if fresh (< 24 hours)
-        - Otherwise: pulls from watchlist + mixes in trending/seasonal
+        - Otherwise: pulls from all connected watchlists + mixes in trending/seasonal
         - Falls back to top 100 if no watchlist
         """
         import time
-        from resources.lib.WatchlistFlavor import WatchlistFlavor
+
+        control.log('### [ForYou] get_for_you called, page=%s' % page, 'info')
 
         # Check cache first (instant if valid)
         cached_recs, cache_time = database.get_for_you_cache()
         cache_valid = cache_time and (time.time() - cache_time) < 86400  # 24 hours
+        control.log('### [ForYou] Cache check: cached_recs=%s, cache_time=%s, cache_valid=%s' % (
+            len(cached_recs) if cached_recs else None, cache_time, cache_valid), 'info')
 
         if cached_recs and cache_valid:
+            control.log('### [ForYou] Using cached results (%d items)' % len(cached_recs), 'info')
             return self._process_for_you_results(cached_recs, page)
 
-        # Try to build from watchlist
-        flavor = WatchlistFlavor.get_update_flavor()
-        if flavor:
-            recs = self._build_for_you_from_watchlist(flavor.flavor_name)
+        # Get all connected services
+        enabled = control.enabled_watchlists()
+        control.log('### [ForYou] Enabled watchlists: %s' % enabled, 'info')
+        if enabled:
+            recs = self._build_for_you_from_watchlist(enabled)
+            control.log('### [ForYou] Built from watchlist: %s recs' % (len(recs) if recs else 0), 'info')
             if recs:
                 # Mix in some trending/seasonal for freshness
-                recs = self._mix_in_trending(recs, flavor.flavor_name)
+                recs = self._mix_in_trending(recs, enabled)
+                control.log('### [ForYou] After trending mix: %d recs' % len(recs), 'info')
                 database.save_for_you_cache(recs)
                 return self._process_for_you_results(recs, page)
+            else:
+                control.log('### [ForYou] WARNING: _build_for_you_from_watchlist returned None/empty!', 'info')
 
         # Fallback: top 100
+        control.log('### [ForYou] Falling back to top 100', 'info')
         return self.get_top_100(page, None)
 
-    def _build_for_you_from_watchlist(self, flavor_name):
+    def _build_for_you_from_watchlist(self, flavor_names):
         """
-        Aggregate recommendations from watchlist (runs once, then cached).
+        Aggregate recommendations from all connected watchlists (runs once, then cached).
+        - Pulls rated anime from all connected services
+        - Merges/deduplicates by MAL ID, keeping the higher score
         - Weights recommendations from highly-rated anime (8+) more heavily
         - Tracks community recommendation score for display
         """
-        # Get user's watched anime with their scores
-        completed = database.get_watchlist_cache(flavor_name, 'COMPLETED', limit=50)
-        current = database.get_watchlist_cache(flavor_name, 'CURRENT', limit=10)
+        from resources.lib.WatchlistFlavor import WatchlistFlavor
 
-        source_anime = []  # [(mal_id, user_score)]
+        # Proactively populate caches for all connected services
+        WatchlistFlavor.ensure_watchlist_cached(flavor_names)
+
+        # Merge data from all flavors, keyed by MAL ID (keep higher score)
+        merged = {}  # mal_id -> user_score
         watched_ids = set()
-        rated_ids = set()  # Track rated anime for filtering
+        rated_ids = set()
 
-        for item in list(completed) + list(current):
-            mal_id = item.get('mal_id')
-            if not mal_id:
-                continue
-            watched_ids.add(mal_id)
+        for flavor_name in flavor_names:
+            status_map = self._FLAVOR_STATUS_MAP.get(flavor_name, {'completed': 'COMPLETED', 'current': 'CURRENT'})
+            completed_status = status_map['completed']
+            current_status = status_map['current']
+            control.log('### [ForYou] _build_for_you: flavor=%s, completed=%s, current=%s' % (
+                flavor_name, completed_status, current_status), 'info')
 
-            # Extract user's score (structure varies by service)
-            user_score = 0
-            if item.get('data'):
-                data = pickle.loads(item['data'])
-                if isinstance(data, dict):
-                    # AniList: data['score'] or data.get('scoreRaw')
-                    user_score = data.get('score', 0) or data.get('scoreRaw', 0)
-                    # MAL: data['list_status']['score']
-                    if 'list_status' in data:
-                        user_score = data['list_status'].get('score', 0)
-                    # Simkl: data.get('user_rating')
-                    if 'user_rating' in data:
-                        user_score = data.get('user_rating', 0) or 0
+            completed = database.get_watchlist_cache(flavor_name, completed_status, limit=50)
+            current = database.get_watchlist_cache(flavor_name, current_status, limit=50)
+            control.log('### [ForYou] %s cache: completed=%d, current=%d' % (
+                flavor_name, len(completed) if completed else 0, len(current) if current else 0), 'info')
 
-            if user_score > 0:
-                rated_ids.add(mal_id)
+            for item in list(completed) + list(current):
+                mal_id = item.get('mal_id')
+                if not mal_id:
+                    continue
+                watched_ids.add(mal_id)
 
-            source_anime.append((mal_id, user_score))
+                # Extract user's score (structure varies by service)
+                user_score = 0
+                if item.get('data'):
+                    data = pickle.loads(item['data'])
+                    if isinstance(data, dict):
+                        # AniList: data['score'] or data.get('scoreRaw')
+                        user_score = data.get('score', 0) or data.get('scoreRaw', 0)
+                        # MAL: data['list_status']['score']
+                        if 'list_status' in data:
+                            user_score = data['list_status'].get('score', 0)
+                        # Simkl: data.get('user_rating')
+                        if 'user_rating' in data:
+                            user_score = data.get('user_rating', 0) or 0
+
+                if user_score > 0:
+                    rated_ids.add(mal_id)
+
+                # Keep the higher score across services
+                if mal_id not in merged or user_score > merged[mal_id]:
+                    merged[mal_id] = user_score
+
+        source_anime = list(merged.items())  # [(mal_id, user_score)]
 
         if not source_anime:
+            control.log('### [ForYou] WARNING: No source_anime found for flavors=%s' % flavor_names, 'info')
             return None
+
+        control.log('### [ForYou] source_anime=%d, watched=%d, rated=%d (from %d services)' % (
+            len(source_anime), len(watched_ids), len(rated_ids), len(flavor_names)), 'info')
 
         # Sort by user score (prioritize highly-rated anime as sources)
         source_anime.sort(key=lambda x: x[1], reverse=True)
@@ -1475,7 +1517,7 @@ class AniListBrowser(BrowserBase):
 
         # Store community rating in data for UI display
         result = []
-        for r in sorted_recs[:200]:
+        for r in sorted_recs[:500]:
             anime_data = r['data'].copy()
             anime_data['_for_you_score'] = r['community_rating']  # For UI display
             anime_data['_rec_count'] = r['count']  # How many of your anime recommended this
@@ -1483,21 +1525,27 @@ class AniListBrowser(BrowserBase):
 
         return result
 
-    def _mix_in_trending(self, main_recs, flavor_name):
+    def _mix_in_trending(self, main_recs, flavor_names):
         """
         Mix in trending/seasonal anime for variety.
         Adds ~20 anime from current season that match user's top genres.
+        Aggregates genre counts from all connected services' completed lists.
         """
-        # Get user's genre preferences from their watchlist
-        completed = database.get_watchlist_cache(flavor_name, 'COMPLETED', limit=30)
+        # Aggregate genre counts from all connected services
         genre_counts = {}
-        for item in completed:
-            if item.get('data'):
-                data = pickle.loads(item['data'])
-                if isinstance(data, dict):
-                    genres = data.get('media', {}).get('genres', []) or data.get('genres', [])
-                    for genre in genres:
-                        genre_counts[genre] = genre_counts.get(genre, 0) + 1
+        for flavor_name in flavor_names:
+            status_map = self._FLAVOR_STATUS_MAP.get(flavor_name, {'completed': 'COMPLETED', 'current': 'CURRENT'})
+            completed_status = status_map['completed']
+            control.log('### [ForYou] _mix_in_trending: flavor=%s, completed_status=%s' % (flavor_name, completed_status), 'info')
+
+            completed = database.get_watchlist_cache(flavor_name, completed_status, limit=30)
+            for item in completed:
+                if item.get('data'):
+                    data = pickle.loads(item['data'])
+                    if isinstance(data, dict):
+                        genres = data.get('media', {}).get('genres', []) or data.get('genres', [])
+                        for genre in genres:
+                            genre_counts[genre] = genre_counts.get(genre, 0) + 1
 
         # Get top 3 genres
         top_genres = sorted(genre_counts.items(), key=lambda x: x[1], reverse=True)[:3]
@@ -1550,17 +1598,20 @@ class AniListBrowser(BrowserBase):
             insert_pos = min((i + 1) * 8, len(result))  # Every ~8 positions
             result.insert(insert_pos, anime)
 
-        return result[:200]  # Keep top 200
+        return result[:500]  # Keep top 500
 
     def _process_for_you_results(self, all_recs, page):
         """Process cached recommendations for display"""
         dismissed = database.get_dismissed_recommendations()
         completed = self.open_completed()
+        control.log('### [ForYou] _process_results: all_recs=%d, dismissed=%d, completed=%d' % (
+            len(all_recs), len(dismissed), len(completed)), 'info')
 
         # Filter out dismissed/watched
         filtered = [r for r in all_recs
                     if r.get('idMal') not in dismissed
                     and str(r.get('idMal')) not in completed]
+        control.log('### [ForYou] After filtering: %d recs remain (page=%s)' % (len(filtered), page), 'info')
 
         # Paginate
         start = (page - 1) * self.perpage
@@ -1568,6 +1619,7 @@ class AniListBrowser(BrowserBase):
         page_recs = filtered[start:end]
 
         if not page_recs:
+            control.log('### [ForYou] WARNING: No page_recs for page=%s (start=%d, end=%d)' % (page, start, end), 'info')
             return []
 
         get_meta.collect_meta(page_recs)
@@ -1585,27 +1637,36 @@ class AniListBrowser(BrowserBase):
         Returns all items (no pagination) with properties for window display.
         """
         import time
-        from resources.lib.WatchlistFlavor import WatchlistFlavor
+
+        control.log('### [ForYou] get_for_you_window_data called', 'info')
 
         # Check cache first
         cached_recs, cache_time = database.get_for_you_cache()
         cache_valid = cache_time and (time.time() - cache_time) < 86400
+        control.log('### [ForYou] Window cache: cached=%s, time=%s, valid=%s' % (
+            len(cached_recs) if cached_recs else None, cache_time, cache_valid), 'info')
 
         all_recs = None
         if cached_recs and cache_valid:
             all_recs = cached_recs
+            control.log('### [ForYou] Window using cached %d recs' % len(all_recs), 'info')
         else:
-            # Try to build from watchlist
-            flavor = WatchlistFlavor.get_update_flavor()
-            if flavor:
-                recs = self._build_for_you_from_watchlist(flavor.flavor_name)
+            # Try to build from all connected watchlists
+            enabled = control.enabled_watchlists()
+            control.log('### [ForYou] Window enabled watchlists: %s' % enabled, 'info')
+            if enabled:
+                recs = self._build_for_you_from_watchlist(enabled)
+                control.log('### [ForYou] Window built %s recs' % (len(recs) if recs else 0), 'info')
                 if recs:
-                    recs = self._mix_in_trending(recs, flavor.flavor_name)
+                    recs = self._mix_in_trending(recs, enabled)
                     database.save_for_you_cache(recs)
                     all_recs = recs
+                else:
+                    control.log('### [ForYou] Window WARNING: No recs from watchlist!', 'info')
 
         if not all_recs:
             # Fallback: return empty - window will show message
+            control.log('### [ForYou] Window returning EMPTY!', 'info')
             return []
 
         # Filter out dismissed/watched
