@@ -11,7 +11,7 @@ When this skill is invoked, execute the following steps:
 
 1. **Bump Version**: Read `plugin.video.otaku.testing/addon.xml`, extract the current version, increment the patch number (e.g., 5.2.134 -> 5.2.135), and update the file.
 
-2. **Build Repository**: Run `python build_repo.py` to generate the repository zips.
+2. **Build Repository**: Run `python3 build_repo.py` to generate the repository zips.
 
 3. **Commit**: Stage all changes with `git add -A` and commit with message "Build v{NEW_VERSION}"
 
@@ -36,7 +36,7 @@ sed -i "s/version=\"$CURRENT_VERSION\"/version=\"$NEW_VERSION\"/" "$ADDON_XML"
 echo "Version: $CURRENT_VERSION -> $NEW_VERSION"
 
 # Build
-python build_repo.py
+python3 build_repo.py
 
 # Commit and push
 git add -A
