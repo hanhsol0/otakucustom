@@ -235,7 +235,7 @@ class InfoWallWindow(BaseWindow):
                 pass
 
     def handle_action(self, actionID):
-        """Handle item selection - navigate to anime page or play movie."""
+        """Handle item selection - navigate to anime page."""
         if self.getFocusId() != self.LIST_CONTROL:
             return
 
@@ -248,9 +248,5 @@ class InfoWallWindow(BaseWindow):
 
         if anime_id:
             from resources.lib import Main
-            media_type = selected_item.get('media_type', '')
-            if media_type == 'movie':
-                Main.PLAY_MOVIE(f"{anime_id}/", {})
-            else:
-                Main.ANIMES(f"{anime_id}/", {})
+            Main.ANIMES(f"{anime_id}/", {})
             self.close()

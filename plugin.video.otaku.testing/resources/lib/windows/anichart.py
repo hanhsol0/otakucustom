@@ -194,29 +194,20 @@ class Anichart(BaseWindow):
         except (ValueError, AttributeError):
             pass
 
-        # Check if this is a movie (1 episode)
-        total_episodes = selected_item.get('total_episodes')
-        media_type = selected_item.get('media_type', '')
-        is_movie = (str(total_episodes) == '1' or 'Movie' in media_type)
+        url = f"animes/{anime_id}/"
+        self.anime_path = control.addon_url(url)
 
-        if is_movie:
-            control.log(f"[ANICHART] Playing movie: {anime_id}", "info")
-            Main.PLAY_MOVIE(f"{anime_id}/", {})
-        else:
-            url = f"animes/{anime_id}/"
-            self.anime_path = control.addon_url(url)
+        control.log(f"[ANICHART] Generated URL: {self.anime_path}", "info")
 
-            control.log(f"[ANICHART] Generated URL: {self.anime_path}", "info")
-
-            # Show progress dialog for all actions
-            control.progressDialog.create(control.ADDON_NAME, "Loading..")
-            try:
-                new_payload, new_params = control.get_payload_params(self.anime_path)
-                if 'animes/' in new_payload:
-                    x = new_payload.split('animes/', 1)[1]
-                    Main.ANIMES_PAGE(x, new_params)
-                elif 'airing_calendar' in new_payload:
-                    Main.AIRING_CALENDAR(new_payload.rsplit('airing_calendar', 0)[0], new_params)
-            finally:
-                control.progressDialog.close()
+        # Show progress dialog for all actions
+        control.progressDialog.create(control.ADDON_NAME, "Loading..")
+        try:
+            new_payload, new_params = control.get_payload_params(self.anime_path)
+            if 'animes/' in new_payload:
+                x = new_payload.split('animes/', 1)[1]
+                Main.ANIMES_PAGE(x, new_params)
+            elif 'airing_calendar' in new_payload:
+                Main.AIRING_CALENDAR(new_payload.rsplit('airing_calendar', 0)[0], new_params)
+        finally:
+            control.progressDialog.close()
         self.close()
