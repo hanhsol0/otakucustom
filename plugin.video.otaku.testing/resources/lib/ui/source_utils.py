@@ -162,6 +162,10 @@ def getInfo(release_title):
     # info.batch
     if any(i in release_title for i in ['batch', 'complete series']):
         info.append('BATCH')
+    elif re.search(r'seasons?\s*\d.*(?:\+|&|-|,)\s*\d', release_title, re.IGNORECASE):
+        info.append('BATCH')
+    elif re.search(r's\d{1,2}\s*(?:\+|&|-|,)\s*s?\d{1,2}', release_title, re.IGNORECASE):
+        info.append('BATCH')
 
     return info
 
