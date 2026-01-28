@@ -262,9 +262,12 @@ class RealDebrid:
         If the torrent cannot be selected, returns (None, None, None).
         """
         magnet_data = self.addMagnet(magnet)
+        if not magnet_data:
+            control.log('Real-Debrid: addMagnet failed, skipping source', 'warning')
+            return None, None, None
         if not self.torrentSelect(magnet_data['id']):
             self.deleteTorrent(magnet_data['id'])
-            control.ok_dialog(control.ADDON_NAME, "BAD LINK")
+            control.log('Real-Debrid: torrentSelect failed, skipping source', 'warning')
             return None, None, None
         torrent_id = magnet_data['id']
         torrent_info = self.torrentInfo(torrent_id)
@@ -279,11 +282,14 @@ class RealDebrid:
         magnet = source['magnet']
         magnet_data = self.addMagnet(magnet)
 
+        if not magnet_data:
+            control.log('Real-Debrid: addMagnet failed for uncached source', 'warning')
+            return
+
         if not self.torrentSelect(magnet_data['id']):
             self.deleteTorrent(magnet_data['id'])
-            control.ok_dialog(control.ADDON_NAME, "BAD LINK")
-            if runinbackground:
-                return
+            control.log('Real-Debrid: torrentSelect failed for uncached source', 'warning')
+            return
 
         torrent_id = magnet_data['id']
         torrent_info = self.torrentInfo(torrent_id)

@@ -195,14 +195,14 @@ class AllDebrid:
         """
         magnet_data = self.addMagnet(magnet)
         if not magnet_data or 'magnets' not in magnet_data or not magnet_data['magnets']:
-            control.ok_dialog(control.ADDON_NAME, "BAD LINK")
+            control.log('AllDebrid: addMagnet failed, skipping source', 'warning')
             return None, None, None
 
         magnet_id = magnet_data['magnets'][0]['id']
         status_data = self.magnet_status(magnet_id)
         if not status_data or 'magnets' not in status_data:
             self.delete_magnet(magnet_id)
-            control.ok_dialog(control.ADDON_NAME, "BAD LINK")
+            control.log('AllDebrid: magnet_status failed, skipping source', 'warning')
             return None, None, None
 
         status = status_data['magnets']['status']

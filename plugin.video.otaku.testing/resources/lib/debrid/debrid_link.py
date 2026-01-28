@@ -145,7 +145,7 @@ class DebridLink:
         """
         magnet_data = self.addMagnet(magnet)
         if not magnet_data or not magnet_data['id']:
-            control.ok_dialog(control.ADDON_NAME, "BAD LINK")
+            control.log('Debrid-Link: addMagnet failed, skipping source', 'warning')
             return None, None, None
         status = magnet_data.get('downloadPercent') == 100
         return magnet, status, magnet_data
