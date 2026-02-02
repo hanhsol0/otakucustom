@@ -906,12 +906,10 @@ class MyAnimeListWLF(WatchlistFlavorBase):
 
     def update_score(self, mal_id, score):
         from resources.lib.ui.database import clear_watchlist_cache
-        data = {
-            "score": score,
-        }
+        data = {"score": score}
         r = client.put(f'{self._URL}/anime/{mal_id}/my_list_status', headers=self.__headers(), data=data)
         if r and r.ok:
-            clear_watchlist_cache(self._NAME)  # Clear cache to reflect score
+            clear_watchlist_cache(self._NAME)
         return r and r.ok
 
     def delete_anime(self, mal_id):

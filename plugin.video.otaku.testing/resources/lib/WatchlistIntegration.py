@@ -202,9 +202,20 @@ def set_watchlist_status(mal_id, status):
 
 
 def set_watchlist_score(mal_id, score):
-    flavor = WatchlistFlavor.get_update_flavor()
-    if flavor:
-        return WatchlistFlavor.watchlist_set_score(mal_id, score)
+    """Update score on all enabled watchlists."""
+    flavors = WatchlistFlavor.get_enabled_watchlists()
+    if not flavors:
+        return None
+
+    any_success = False
+    for flavor in flavors:
+        try:
+            if flavor.update_score(mal_id, score):
+                any_success = True
+        except Exception:
+            pass
+
+    return any_success
 
 
 def delete_watchlist_anime(mal_id):
