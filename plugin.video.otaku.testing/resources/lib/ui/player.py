@@ -179,40 +179,23 @@ class WatchlistPlayer(player):
         return (self.current_time / self.total_time) * 100 if self.total_time != 0 else 0
 
     def _show_rating_prompt(self, mal_id, title):
-        """Show a rating prompt after finishing an anime"""
-        # Wait a bit for playback to settle and any dialogs to close
-        xbmc.sleep(2000)
+        """Show a rating prompt overlay during the final moments of playback"""
+        control.log(f'[Player] _show_rating_prompt called for {title} (mal_id={mal_id})', 'info')
 
-        # Don't show if player started something else
-        if self.isPlaying():
-            return
+        from resources.lib.windows.rating_prompt import show_rating_prompt
 
-        score_list = [
-            "(10) Masterpiece",
-            "(9) Great",
-            "(8) Very Good",
-            "(7) Good",
-            "(6) Fine",
-            "(5) Average",
-            "(4) Bad",
-            "(3) Very Bad",
-            "(2) Horrible",
-            "(1) Appalling",
-        ]
+        # Show the overlay rating prompt (appears during video)
+        score = show_rating_prompt(mal_id, title)
+        control.log(f'[Player] Rating prompt returned score: {score}', 'info')
 
-        # Show the rating dialog
-        selection = xbmcgui.Dialog().select(
-            f"Rate [B]{title}[/B]",
-            ["Skip"] + score_list
-        )
-
-        if selection > 0:  # User selected a score (not Skip or cancelled)
-            score = 11 - selection  # Convert selection to score (1=10, 2=9, etc.)
+        if score:
             result = WatchlistIntegration.set_watchlist_score(mal_id, score)
             if result:
                 control.notify(control.ADDON_NAME, f"Rated [B]{title}[/B] as {score}/10")
             else:
                 control.notify(control.ADDON_NAME, "Failed to save rating")
+        else:
+            control.log('[Player] User skipped or cancelled rating', 'info')
 
     def onWatchedPercent(self):
         if not self._watchlist_update:
@@ -236,16 +219,22 @@ class WatchlistPlayer(player):
                 self.updated = True
 
                 # Update watchlist status based on completion
+                control.log(f'[Player] Checking completion: episode={self.episode}, total_episodes={episodes}, status={status}', 'info')
                 if self.episode == episodes and status in ['Finished Airing', 'FINISHED']:
+                    control.log('[Player] Last episode of finished anime - marking completed', 'info')
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'completed')
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'COMPLETED')
                     # Run sync in background to avoid blocking playback
                     threading.Thread(target=lambda: (xbmc.sleep(3000), service.sync_watchlist(True)), daemon=True).start()
                     # Prompt user to rate the anime if enabled
-                    if control.getBool('watchlist.rating.prompt'):
+                    rating_prompt_enabled = control.getBool('watchlist.rating.prompt')
+                    control.log(f'[Player] Rating prompt enabled: {rating_prompt_enabled}', 'info')
+                    if rating_prompt_enabled:
                         title = kodi_meta.get('title_userPreferred', 'this anime')
+                        control.log(f'[Player] Launching rating prompt for {title}', 'info')
                         threading.Thread(target=self._show_rating_prompt, args=(self.mal_id, title), daemon=True).start()
                 else:
+                    control.log('[Player] Not last episode or not finished - marking watching', 'info')
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'watching')
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'current')
                     WatchlistIntegration.set_watchlist_status(self.mal_id, 'CURRENT')
