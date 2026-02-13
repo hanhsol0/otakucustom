@@ -21,6 +21,11 @@ class RealDebrid:
         self.BaseUrl = "https://api.real-debrid.com/rest/1.0"
 
     def headers(self):
+        if self.token and self.refresh:
+            expiry = control.getInt('realdebrid.expiry')
+            if expiry and int(time.time()) >= expiry:
+                control.log('Real-Debrid: Token expired, refreshing...', 'info')
+                self.refreshToken()
         return {'Authorization': f"Bearer {self.token}"}
 
     def auth_loop(self):
@@ -168,6 +173,7 @@ class RealDebrid:
         response = client.post(f'{self.BaseUrl}/torrents/addMagnet', headers=self.headers(), data=postData)
         if response and response.ok:
             return response.json()
+        control.log(f'Real-Debrid addMagnet failed: status={response.status_code if response else "no response"}', 'warning')
         return None
 
     def list_torrents(self):

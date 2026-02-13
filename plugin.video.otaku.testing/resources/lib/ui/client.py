@@ -478,7 +478,7 @@ def request(
                     control.log('%s has a DDoS-Guard challenge.' % (netloc))
                     if not error:
                         return None
-            elif output == '':
+            else:
                 control.log('Request-HTTPError (%s): %s' % (e.code, url))
                 if not error:
                     return None
