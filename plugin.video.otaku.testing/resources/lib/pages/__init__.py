@@ -206,7 +206,7 @@ class Sources(GetSources):
                 or not self.remainingProviders
                 or (control.getBool('general.terminate.oncloud') and len(self.cloud_files) > 0)
                 or (control.getBool('general.terminate.onlocal') and len(self.local_files) > 0)
-                or (debrid_priority and (len(self.torrentSources) > 0 or len(self.cloud_files) > 0))
+                or (debrid_priority and not any(p in self.remainingProviders for p in self.torrentProviders))
             ):
                 break
 

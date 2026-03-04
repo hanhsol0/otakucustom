@@ -23,7 +23,7 @@ class RealDebrid:
     def headers(self):
         if self.token and self.refresh:
             expiry = control.getInt('realdebrid.expiry')
-            if expiry and int(time.time()) >= expiry:
+            if not expiry or int(time.time()) >= expiry:
                 control.log('Real-Debrid: Token expired, refreshing...', 'info')
                 self.refreshToken()
         return {'Authorization': f"Bearer {self.token}"}
@@ -163,10 +163,12 @@ class RealDebrid:
                     control.setSetting('realdebrid.username', user_info['username'])
                     control.setSetting('realdebrid.auth.status', user_info['type'])
                 control.log('refreshed realdebrid.token')
+                control.notify(control.ADDON_NAME, 'Real-Debrid token refreshed')
             except (ValueError, KeyError) as e:
                 control.log(f"realdebrid.refresh error: {str(e)}", 'warning')
         else:
             control.log(f"realdebrid.refresh failed: status {response.status_code if response else 'no response'}", 'warning')
+            control.notify(control.ADDON_NAME, 'Real-Debrid refresh failed')
 
     def addMagnet(self, magnet):
         postData = {'magnet': magnet}
@@ -215,51 +217,47 @@ class RealDebrid:
                 if torrent_file['path'] == best_match['path']:
                     return source['torrent_info']['links'][f_index]
 
-    def resolve_single_magnet(self, hash_, magnet, episode='', pack_select=False):
-        hashCheck = client.get(f'{self.BaseUrl}/torrents/instantAvailability/{hash_}', headers=self.headers())
-        if not hashCheck or not hashCheck.ok:
-            return None
+    def resolve_single_magnet(self, hash_, magnet, episode='', pack_select=False, torrent_id=None):
+        # Reuse existing torrent_id from cache check, or add fresh
+        if torrent_id:
+            files = self.torrentInfo(torrent_id)
+        else:
+            torrent_data = self.addMagnet(magnet)
+            if not torrent_data:
+                return None
+            torrent_id = torrent_data['id']
+            self.torrentSelect(torrent_id)
+            files = self.torrentInfo(torrent_id)
 
-        try:
-            hashCheck = hashCheck.json()
-        except ValueError:
+        if not files or files.get('status') != 'downloaded':
+            self.deleteTorrent(torrent_id)
             return None
 
         stream_link = None
-        for _ in hashCheck[hash_]['rd']:
-            torrent = self.addMagnet(magnet)
-            if not torrent:
-                continue
-
-            self.torrentSelect(torrent['id'])
-            files = self.torrentInfo(torrent['id'])
-            if not files:
-                self.deleteTorrent(torrent['id'])
-                continue
-
-            selected_files = [(idx, i) for idx, i in enumerate([i for i in files['files'] if i['selected'] == 1])]
-            if pack_select:
-                best_match = source_utils.get_best_match('path', [i[1] for i in selected_files], episode, pack_select)
-                if best_match:
-                    try:
-                        file_index = [i[0] for i in selected_files if i[1]['path'] == best_match['path']][0]
-                        link = files['links'][file_index]
-                        stream_link = self.resolve_hoster(link)
-                    except IndexError:
-                        pass
-            elif len(selected_files) == 1:
-                stream_link = self.resolve_hoster(files['links'][0])
-            elif len(selected_files) > 1:
-                best_match = source_utils.get_best_match('path', [i[1] for i in selected_files], episode)
-                if best_match:
-                    try:
-                        file_index = [i[0] for i in selected_files if i[1]['path'] == best_match['path']][0]
-                        link = files['links'][file_index]
-                        stream_link = self.resolve_hoster(link)
-                    except IndexError:
-                        pass
-            self.deleteTorrent(torrent['id'])
-            return stream_link
+        selected_files = [(idx, i) for idx, i in enumerate([i for i in files['files'] if i['selected'] == 1])]
+        if pack_select:
+            best_match = source_utils.get_best_match('path', [i[1] for i in selected_files], episode, pack_select)
+            if best_match:
+                try:
+                    file_index = [i[0] for i in selected_files if i[1]['path'] == best_match['path']][0]
+                    link = files['links'][file_index]
+                    stream_link = self.resolve_hoster(link)
+                except IndexError:
+                    pass
+        elif len(selected_files) == 1:
+            stream_link = self.resolve_hoster(files['links'][0])
+        elif len(selected_files) > 1:
+            best_match = source_utils.get_best_match('path', [i[1] for i in selected_files], episode)
+            if best_match:
+                try:
+                    file_index = [i[0] for i in selected_files if i[1]['path'] == best_match['path']][0]
+                    link = files['links'][file_index]
+                    stream_link = self.resolve_hoster(link)
+                except IndexError:
+                    pass
+        if self.autodelete:
+            self.deleteTorrent(torrent_id)
+        return stream_link
 
     def get_torrent_status(self, magnet):
         """

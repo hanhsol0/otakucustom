@@ -36,8 +36,8 @@ source_type = [['local'], ['cloud'], ['torrent', 'torrent (uncached)'], ['hoster
 
 # Define default sort options
 default_sort_options = {
-    'sortmethod.1': 1,  # type
-    'sortmethod.2': 5,  # resolution
+    'sortmethod.1': 5,  # resolution
+    'sortmethod.2': 1,  # type
     'sortmethod.3': 2,  # debrid provider
     'sortmethod.4': 3,  # audio
     'sortmethod.5': 4,  # subtitles

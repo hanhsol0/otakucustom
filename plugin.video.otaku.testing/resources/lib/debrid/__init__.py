@@ -108,32 +108,11 @@ class Debrid:
                     self.debridlinkUnCached.append(torrent)
 
     def real_debrid_worker(self, torrent_list):
-        hash_list = [i['hash'] for i in torrent_list]
-        if len(hash_list) > 0:
-            api = real_debrid.RealDebrid()
-            hash_string = '/'.join(hash_list)
-            response = client.get(f'{api.BaseUrl}/torrents/instantAvailability/{hash_string}', headers=api.headers())
-            if response and response.ok:
-                try:
-                    availability = response.json()
-                    for torrent in torrent_list:
-                        torrent['debrid_provider'] = 'Real-Debrid'
-                        torrent_hash = torrent['hash'].lower()
-                        # Check if hash exists in response and has available variants
-                        if torrent_hash in availability and availability[torrent_hash].get('rd'):
-                            self.realdebridCached.append(torrent)
-                        else:
-                            self.realdebridUnCached.append(torrent)
-                except (ValueError, KeyError):
-                    # On error, mark all as uncached
-                    for torrent in torrent_list:
-                        torrent['debrid_provider'] = 'Real-Debrid'
-                        self.realdebridUnCached.append(torrent)
-            else:
-                # API failed, mark all as uncached
-                for torrent in torrent_list:
-                    torrent['debrid_provider'] = 'Real-Debrid'
-                    self.realdebridUnCached.append(torrent)
+        # RD disabled the instantAvailability endpoint, so we skip upfront cache checking.
+        # Sources are marked as 'cached' and resolve_single_magnet checks on-demand during playback.
+        for torrent in torrent_list:
+            torrent['debrid_provider'] = 'Real-Debrid'
+            self.realdebridCached.append(torrent)
 
     def premiumize_worker(self, torrent_list):
         hash_list = [i['hash'] for i in torrent_list]
