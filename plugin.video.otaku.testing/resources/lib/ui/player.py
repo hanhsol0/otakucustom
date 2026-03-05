@@ -245,9 +245,9 @@ class WatchlistPlayer(player):
         # Monitor the Playback with optimized wait
         self._monitor = Monitor()
         for i in range(40):  # Increased attempts but shorter waits
-            if self._monitor.playbackerror:
+            if self._monitor.playback_stopped:
                 del self._monitor
-                return control.log('playbackerror', 'warning')
+                return control.log('playback_stopped', 'warning')
             if self.isPlayingVideo() and self.getTotalTime() != 0:
                 break
             self._monitor.waitForAbort(0.5)  # Check every 0.5 seconds
@@ -801,8 +801,8 @@ class PlayerDialogs(xbmc.Player):
 class Monitor(xbmc.Monitor):
     def __init__(self):
         super().__init__()
-        self.playbackerror = False
+        self.playback_stopped = False
 
     def onNotification(self, sender, method, data):
         if method == 'Player.OnStop':
-            self.playbackerror = True
+            self.playback_stopped = True

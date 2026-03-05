@@ -20,6 +20,7 @@ import pickle
 import json
 import ast
 import sys
+import xbmc
 
 from resources.lib import MetaBrowser
 from resources.lib.ui import control, database, utils
@@ -1797,8 +1798,9 @@ def PLAY(payload, params):
                     Resolver('resolver_alt.xml', control.ADDON_PATH, actionArgs=_mock_args).doModal(sources, {}, False)
                 else:
                     Resolver('resolver.xml', control.ADDON_PATH, actionArgs=_mock_args).doModal(sources, {}, False)
-    else:
-        control.playList.clear()
+    # If no playback occurred, suppress Kodi's error notification
+    if not xbmc.Player().isPlaying():
+        control.cancel_playback()
     control.exit_code()
 
 
@@ -1851,8 +1853,9 @@ def PLAY_MOVIE(payload, params):
                 Resolver('resolver_alt.xml', control.ADDON_PATH, actionArgs=_mock_args).doModal(sources, {}, False)
             else:
                 Resolver('resolver.xml', control.ADDON_PATH, actionArgs=_mock_args).doModal(sources, {}, False)
-    else:
-        control.playList.clear()
+    # If no playback occurred, suppress Kodi's error notification
+    if not xbmc.Player().isPlaying():
+        control.cancel_playback()
     control.exit_code()
 
 

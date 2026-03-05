@@ -377,6 +377,8 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         '''
     )
 
+    control.log(f"get_best_match: {len(dictionary_list)} files, episode={episode}, pack_select={pack_select}", 'info')
+
     files = []
     for i in dictionary_list:
         original_filename = i[dict_key].split('/')[-1]
@@ -407,18 +409,29 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         non_extras = [f for f in files if not f.get('is_extra', False)]
         if non_extras:
             files = non_extras
-            control.log(f"Filtered to {len(files)} non-extra files")
+            control.log(f"Filtered to {len(files)} non-extra files", 'info')
         else:
             # ALL files are extras - don't auto-select, fail instead
             control.log(f"All {len(files)} files are extras - no valid episode file found", 'warning')
             control.setBool('best_match', False)
             return {}
 
+        # Step 1b: Filter out files in movie/special subdirectories
+        movie_path_pattern = re.compile(r'(?i)(?:^|/)(?:movies?|specials?|extras?|bonus|ova|oad|creditless)(?:/|$)')
+        non_movie_files = [f for f in files if not movie_path_pattern.search(f.get(dict_key, ''))]
+        if non_movie_files:
+            if len(non_movie_files) < len(files):
+                control.log(f"Filtered out {len(files) - len(non_movie_files)} files in movie/special folders", 'info')
+            files = non_movie_files
+
         # Step 2: Parse file sizes for comparison
         def get_file_size_mb(f):
             """Extract file size in MB for comparison"""
-            file_size = f.get('size', 0)
+            file_size = f.get('size', 0) or f.get('bytes', 0)
             if isinstance(file_size, (int, float)):
+                # RD returns bytes as large integers; convert to MB
+                if file_size > 100000:
+                    return file_size / (1024 * 1024)
                 return file_size
             if isinstance(file_size, str):
                 try:
@@ -442,16 +455,47 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         for f in files:
             f['_size_mb'] = get_file_size_mb(f)
 
-        # Step 3: Sort primarily by file size (largest = full episode)
-        # Full episodes are 200MB-2GB, extras are typically under 100MB
-        files = sorted(files, key=lambda f: f.get('_size_mb', 0), reverse=True)
+        # Step 3: Score each file instead of just picking largest
+        def score_file(f):
+            score = 0
+            size_mb = f.get('_size_mb', 0)
+            # Explicit episode marker (E01, S01E01, - 01) = high confidence
+            if f.get('has_explicit_ep'):
+                score += 1000
+            # Penalize movie-sized files (>4GB)
+            if size_mb > 4096:
+                score -= 500
+            # Prefer typical episode size range (50MB-3.5GB)
+            if 50 <= size_mb <= 3584:
+                score += 100
+            # Cluster bonus: files similar in size to the majority
+            if len(files) >= 3:
+                sizes = sorted([x.get('_size_mb', 0) for x in files if x.get('_size_mb', 0) > 0])
+                if sizes:
+                    median_size = sizes[len(sizes) // 2]
+                    if median_size > 0 and 0.3 <= (size_mb / median_size) <= 3.0:
+                        score += 200
+            # Tiebreaker: prefer larger within same score tier
+            score += min(size_mb / 10000, 50)
+            return score
 
-        # Log selection
+        for f in files:
+            f['_score'] = score_file(f)
+
+        files = sorted(files, key=lambda f: f['_score'], reverse=True)
+
+        # Log all candidates and selection
+        for f in files:
+            control.log(f"  Candidate: {f.get('_filename', 'unknown')} "
+                        f"({f.get('_size_mb', 0):.1f} MB, score={f.get('_score', 0):.0f}, "
+                        f"explicit_ep={f.get('has_explicit_ep', False)}, "
+                        f"regex_matches={f.get('regex_matches', [])})", 'info')
         selected = files[0]
         control.log(f"Best match: {selected.get('_filename', 'unknown')} "
-                    f"({selected.get('_size_mb', 0):.1f} MB) from {len(files)} candidates")
+                    f"({selected.get('_size_mb', 0):.1f} MB, score={selected.get('_score', 0):.0f}, "
+                    f"explicit_ep={selected.get('has_explicit_ep', False)}) from {len(files)} candidates", 'info')
 
-        # Auto-select the largest file
+        # Auto-select the best-scored file
         files = [selected]
 
     return files[0]
@@ -544,23 +588,37 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
             title = torrent['name'].lower()
 
         # Title validation: Check if torrent title contains any of the anime titles
+        # Also detect extra subtitle words that suggest a different season/entry
+        stop_words = {'the', 'a', 'an', 'of', 'in', 'to', 'and', 'or', 'no', 'wa', 'ga', 'wo', 'ni', 'de', 'e', 'ka'}
+        title_has_extra_subtitle = False
         if anime_titles_clean:
             title_clean_for_match = cleanTitle(title)
+            # Also clean out codec/quality/group info for title comparison
+            title_clean_stripped = cleanTitle(clean_text(title))
             title_matches = False
+            min_extra_words = float('inf')
             for anime_title in anime_titles_clean:
-                # Check if significant words from anime title appear in torrent title
                 anime_words = set(anime_title.split())
                 title_words = set(title_clean_for_match.split())
-                # Require at least 1 word match or 50% of anime title words (relaxed for short titles)
                 common_words = anime_words & title_words
                 match_ratio = len(common_words) / len(anime_words) if len(anime_words) > 0 else 0
                 if len(common_words) >= 1 and match_ratio >= 0.5:
                     title_matches = True
+                    # Check how many significant extra words the torrent title has
+                    stripped_words = set(title_clean_stripped.split())
+                    extra_words = stripped_words - anime_words - stop_words
+                    # Remove numbers (episode/season numbers) from extra words
+                    extra_words = {w for w in extra_words if not w.isdigit()}
+                    min_extra_words = min(min_extra_words, len(extra_words))
                     break
             if not title_matches:
-                # Log filtered torrents for debugging
                 control.log(f"Title filter rejected: {title[:80]} (looking for: {anime_titles_clean[0] if anime_titles_clean else 'none'})", 'debug')
                 continue
+            # If torrent title has 3+ extra significant words beyond the anime title,
+            # it likely has a subtitle indicating a different season/entry
+            # (e.g., "Made in Abyss The Golden City of the Scorching Sun" vs "Made in Abyss")
+            if min_extra_words >= 3:
+                title_has_extra_subtitle = True
 
         # Clean the title for extraction
         clean_title = clean_text(title)
@@ -645,8 +703,12 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
         # Determine if we have any metadata to filter by
         has_info = bool(extracted_episode or extracted_seasons or extracted_parts)
 
-        # For the inverted filter, torrents with no info are immediately added.
+        # Torrents with no extractable info: only pass if title is a close match
+        # (reject if title has extra subtitle words suggesting a different entry)
         if not has_info:
+            if title_has_extra_subtitle:
+                control.log(f"No-info filter rejected (extra subtitle): {title[:80]}", 'info')
+                continue
             filtered.append(torrent)
             continue
 
@@ -676,6 +738,12 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
                         valid = False
                 except (ValueError, TypeError):
                     valid = False
+
+        # If torrent has extra subtitle words and no explicit season,
+        # reject it — it's likely a different season/entry with a matching episode number
+        if title_has_extra_subtitle and not extracted_seasons:
+            control.log(f"Season-mismatch filter rejected (extra subtitle, no season): {title[:80]}", 'info')
+            valid = False
 
         # Check season match if applicable
         if season and extracted_seasons:

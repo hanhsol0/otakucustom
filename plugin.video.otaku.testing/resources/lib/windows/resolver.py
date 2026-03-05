@@ -260,8 +260,7 @@ class Resolver(BaseWindow):
         # Monitor playback start
         monitor = Monitor()
         for _ in range(30):
-            if monitor.waitForAbort(1) or monitor.playbackerror or monitor.abortRequested():
-                xbmcplugin.setResolvedUrl(control.HANDLE, False, item)
+            if monitor.waitForAbort(1) or monitor.stopped or monitor.abortRequested():
                 control.playList.clear()
                 self.abort = True
                 break
@@ -489,14 +488,14 @@ class Resolver(BaseWindow):
 class Monitor(xbmc.Monitor):
     def __init__(self):
         super().__init__()
-        self.playbackerror = False
+        self.stopped = False
         self.playing = False
 
     def onNotification(self, sender, method, data):
         if method == 'Player.OnAVStart':
             self.playing = True
         elif method == 'Player.OnStop':
-            self.playbackerror = True
+            self.stopped = True
         # else:
         #     control.log(f'{method} | {data}')
 

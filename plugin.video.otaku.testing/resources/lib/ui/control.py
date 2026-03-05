@@ -279,6 +279,16 @@ def get_payload_params(url):
     return get_plugin_url(payload), get_plugin_params(params)
 
 
+def cancel_playback():
+    """Signal to Kodi that playback was intentionally cancelled, suppressing the error notification."""
+    item = xbmcgui.ListItem(offscreen=True)
+    xbmcplugin.setResolvedUrl(HANDLE, False, item)
+    playList.clear()
+    # Dismiss Kodi's "Playback did not occur" error dialog
+    xbmc.sleep(200)
+    xbmc.executebuiltin('Dialog.Close(okdialog,true)')
+
+
 def exit_code():
     if getSetting('reuselanguageinvoker.status') == 'Enabled':
         exit_(0)
