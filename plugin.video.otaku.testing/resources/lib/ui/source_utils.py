@@ -379,6 +379,15 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
 
     control.log(f"get_best_match: {len(dictionary_list)} files, episode={episode}, pack_select={pack_select}", 'info')
 
+    # Pattern to strip quality/codec tokens that cause false episode matches (e.g., 10bit, 1080p)
+    quality_strip = re.compile(
+        r'(?i)[\s._-]?(?:10bit|10[\s._-]?bits?|8bit|8[\s._-]?bits?|'
+        r'1080p|720p|480p|2160p|4k|'
+        r'x265|x264|h265|h264|hevc|avc|'
+        r'bd1080p|bd720p|flac|aac|opus|'
+        r'dual[\s._-]?audio|multi[\s._-]?audio)[\s._-]?'
+    )
+
     files = []
     for i in dictionary_list:
         original_filename = i[dict_key].split('/')[-1]
@@ -386,11 +395,13 @@ def get_best_match(dict_key, dictionary_list, episode, pack_select=False):
         path = re.sub(r'\[.*?]', '', original_filename)
         if not is_file_ext_valid(path):
             continue
-        i['regex_matches'] = regex.findall(path)
+        # Strip quality/codec tokens before episode matching to prevent false matches
+        path_clean = quality_strip.sub(' ', path)
+        i['regex_matches'] = regex.findall(path_clean)
         # Check ORIGINAL filename for extras (to catch [SP01], [NCOP], etc.)
         i['is_extra'] = bool(exclude_patterns.search(original_filename))
         # Check if this has an explicit episode marker (higher confidence)
-        i['has_explicit_ep'] = bool(explicit_ep_pattern.search(path))
+        i['has_explicit_ep'] = bool(explicit_ep_pattern.search(path_clean))
         # Store original filename for logging
         i['_filename'] = original_filename
         files.append(i)
@@ -699,6 +710,11 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
                             season_nums = []
                     elif not regex_ordinal_check.search(clean_title_no_parts):
                         extracted_episode = last_num
+
+        # Reject movie-only torrents when searching for TV episodes
+        if episode and re.search(r'(?i)\bmovies?\b', title) and not extracted_episode:
+            control.log(f"Movie filter rejected: {title[:80]}", 'info')
+            continue
 
         # Determine if we have any metadata to filter by
         has_info = bool(extracted_episode or extracted_seasons or extracted_parts)
