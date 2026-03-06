@@ -711,8 +711,8 @@ def filter_sources(provider, torrent_list, mal_id, season=None, episode=None, pa
                     elif not regex_ordinal_check.search(clean_title_no_parts):
                         extracted_episode = last_num
 
-        # Reject movie-only torrents when searching for TV episodes
-        if episode and re.search(r'(?i)\bmovies?\b', title) and not extracted_episode:
+        # Reject movie-only torrents when searching for TV episodes (season is set)
+        if season and episode and re.search(r'(?i)\bmovies?\b', title) and not extracted_episode:
             control.log(f"Movie filter rejected: {title[:80]}", 'info')
             continue
 
